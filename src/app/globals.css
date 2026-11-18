@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* ------------------------------------------------------------------
-   Vierklee Design-System
+   FinanzKlee Design-System
    Alle Farben laufen über CSS-Variablen, damit Hell/Dunkel und die
    Akzentfarbe zur Laufzeit gewechselt werden können.
 ------------------------------------------------------------------- */
@@ -227,7 +227,7 @@ body {
   --m-leaf-rot: 45deg;
   --m-burst: 1;
 
-  /* Sicherer Bereich oben nur, wenn Vierklee als installierte App läuft */
+  /* Sicherer Bereich oben nur, wenn FinanzKlee als installierte App läuft */
   --safe-top: 0px;
   interpolate-size: allow-keywords;
 }
@@ -373,7 +373,7 @@ details[open]::details-content { height: auto; opacity: 1; }
 .burst-leaf { opacity: var(--m-burst); }
 
 /* ------------------------------------------------------------------
-   Reduzierte Bewegung (Gerät meldet "Bewegung reduzieren" und in Vierklee
+   Reduzierte Bewegung (Gerät meldet "Bewegung reduzieren" und in FinanzKlee
    ist nicht "Immer an" gewählt): keine Wege, nur weiche Überblendungen.
 ------------------------------------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
@@ -400,7 +400,7 @@ details[open]::details-content { height: auto; opacity: 1; }
   :root:not([data-motion="on"]) .nav-indicator { transition: opacity 240ms var(--ease-out); }
 }
 
-/* "Aus" in Vierklee: gar keine Animationen */
+/* "Aus" in FinanzKlee: gar keine Animationen */
 :root[data-motion="off"] { scroll-behavior: auto; }
 :root[data-motion="off"] *,
 :root[data-motion="off"] *::before,

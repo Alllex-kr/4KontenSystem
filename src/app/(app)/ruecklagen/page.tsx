@@ -49,7 +49,7 @@ export default async function RuecklagenPage() {
     <div className="space-y-6">
       <PageHeader
         title={t("Rücklagen")}
-        subtitle={t("Für Ausgaben, die sicher kommen, aber nicht jeden Monat: Geschenke, Urlaub, ein neuer Laptop. Vierklee rechnet aus, wie viel du dafür monatlich zurücklegen solltest.")}
+        subtitle={t("Für Ausgaben, die sicher kommen, aber nicht jeden Monat: Geschenke, Urlaub, ein neuer Laptop. FinanzKlee rechnet aus, wie viel du dafür monatlich zurücklegen solltest.")}
       />
       <ReserveClient
         items={items}

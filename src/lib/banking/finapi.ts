@@ -75,7 +75,7 @@ export function createFinapiProvider(cfg: FinapiConfig): BankProvider {
     return clientToken.token;
   }
 
-  /** finAPI-User zum Vierklee-Nutzer holen oder anlegen. */
+  /** finAPI-User zum FinanzKlee-Nutzer holen oder anlegen. */
   async function identity(userId: string) {
     const existing = await cfg.store.get(userId);
     if (existing) return existing;

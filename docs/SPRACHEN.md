@@ -1,6 +1,6 @@
 # Sprachen (Deutsch, Englisch, Russisch, Türkisch, Spanisch)
 
-Vierklee erkennt die Sprache automatisch und lässt sie umschalten: in der Seitenleiste, im „Mehr“-Menü, unter Einstellungen → Sprache sowie auf Login, Registrierung und Startseite.
+FinanzKlee erkennt die Sprache automatisch und lässt sie umschalten: in der Seitenleiste, im „Mehr“-Menü, unter Einstellungen → Sprache sowie auf Login, Registrierung und Startseite.
 
 **Reihenfolge:** gespeicherte Wahl im Konto → Cookie `vk_lang` (Wahl ohne Login) → Browsersprache → Deutsch.
 

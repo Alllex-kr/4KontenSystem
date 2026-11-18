@@ -81,7 +81,7 @@ export default async function PlansPage() {
       ))}
 
       {canEdit && (
-        <Card title="Neues Abo" subtitle="Zum Beispiel „Vierklee Pro“ mit zusätzlichen Funktionen.">
+        <Card title="Neues Abo" subtitle="Zum Beispiel „FinanzKlee Pro“ mit zusätzlichen Funktionen.">
           <PlanForm sets={sets} setGroups={setGroups} canEdit />
         </Card>
       )}

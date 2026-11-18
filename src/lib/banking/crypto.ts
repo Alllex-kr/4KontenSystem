@@ -2,7 +2,7 @@ import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
 
 /**
  * AES-256-GCM für Anbieter-Zugangsdaten (z. B. das Passwort des finAPI-Users).
- * Bank-Zugangsdaten der Nutzer speichert Vierklee NIE – die gibt man nur im Web-Formular des Anbieters ein.
+ * Bank-Zugangsdaten der Nutzer speichert FinanzKlee NIE – die gibt man nur im Web-Formular des Anbieters ein.
  *
  * Schlüssel: BANKING_ENCRYPTION_KEY = 32 Byte als Base64 (z. B. `openssl rand -base64 32`) oder 64 Hex-Zeichen.
  */

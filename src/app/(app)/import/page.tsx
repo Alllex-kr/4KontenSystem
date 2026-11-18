@@ -30,11 +30,11 @@ export default async function ImportPage() {
     <div className="space-y-6">
       <PageHeader
         title={t("Umsätze importieren")}
-        subtitle={t("Lade den CSV-Export aus deinem Online-Banking hoch. Vierklee erkennt das Format, schlägt Kategorien vor und überspringt bereits importierte Umsätze.")}
+        subtitle={t("Lade den CSV-Export aus deinem Online-Banking hoch. FinanzKlee erkennt das Format, schlägt Kategorien vor und überspringt bereits importierte Umsätze.")}
       />
       <ImportClient accounts={accounts} rules={rules.map((r) => ({ pattern: r.pattern, category: r.category }))} ai={{ enabled: ai.enabled, available: ai.available && ai.permitted, remaining: ai.remaining }} />
 
-      <Card title={t("Gelernte Zuordnungen")} subtitle={t("Wenn du beim Import eine Kategorie änderst (oder Claude einen Empfänger einordnet), merkt sich Vierklee das für den Empfänger.")}>
+      <Card title={t("Gelernte Zuordnungen")} subtitle={t("Wenn du beim Import eine Kategorie änderst (oder Claude einen Empfänger einordnet), merkt sich FinanzKlee das für den Empfänger.")}>
         {rules.length === 0 ? (
           <p className="text-sm text-muted">{t("Noch keine. Ändere in der Vorschau eine Kategorie, dann taucht die Regel hier auf.")}</p>
         ) : (

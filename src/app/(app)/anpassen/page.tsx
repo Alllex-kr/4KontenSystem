@@ -21,7 +21,7 @@ export default async function AnpassenPage() {
   const [accounts, settings] = await Promise.all([loadAccountsLite(user.id), prisma.settings.findUnique({ where: { userId: user.id } })]);
   return (
     <div className="max-w-4xl">
-      <PageHeader title={t("Design & Anpassen")} subtitle={t("Mach Vierklee zu deinem Tool. Änderungen werden sofort übernommen und automatisch gespeichert.")} />
+      <PageHeader title={t("Design & Anpassen")} subtitle={t("Mach FinanzKlee zu deinem Tool. Änderungen werden sofort übernommen und automatisch gespeichert.")} />
       <AnpassenClient appearance={normalizeAppearance(settings)} accounts={accounts} />
     </div>
   );

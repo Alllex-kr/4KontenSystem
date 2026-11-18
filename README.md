@@ -1,4 +1,4 @@
-# 🍀 Vierklee – Glück ist planbar.
+# 🍀 FinanzKlee – Glück ist planbar.
 
 Web-App für Studierende, um Geld mit dem Vier-Konten-System zu organisieren. Markenleitfaden: [docs/BRAND.md](docs/BRAND.md).
 

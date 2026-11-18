@@ -1,18 +1,18 @@
-# Vierklee – Markenleitfaden
+# FinanzKlee – Markenleitfaden
 
 > **Glück ist planbar.** 🍀
 > Das Vier-Konten-System für dein Studium.
 
 ## Idee
 
-Ein vierblättriges Kleeblatt ist ein Glückssymbol, und jedes seiner vier Blätter steht für eines der vier Konten. Vierklee nimmt Studierenden die Angst vor dem Thema Geld: freundlich, ermutigend und ohne Fachchinesisch.
+Ein vierblättriges Kleeblatt ist ein Glückssymbol, und jedes seiner vier Blätter steht für eines der vier Konten. FinanzKlee nimmt Studierenden die Angst vor dem Thema Geld: freundlich, ermutigend und ohne Fachchinesisch.
 
 ## Logo
 
 | Element | Beschreibung |
 | --- | --- |
 | Bildmarke | Vier Herzen als Kleeblatt, jedes um 45° gedreht, Spitzen zeigen zur Mitte (seit 19.11.2026, ohne Stiel) |
-| Wortmarke | `vier` in Textfarbe und `klee` in Klee-Grün, kleingeschrieben, Nunito Black |
+| Wortmarke | `Finanz` in Textfarbe und `Klee` in Klee-Grün, Nunito Black (bis 19.11.2026 hieß die Marke „Vierklee“) |
 | Dateien | `src/components/brand/Logo.tsx` (React), `public/icon.svg` (App-Icon/Favicon) |
 
 Die Blätter laufen im Uhrzeigersinn von oben links:
@@ -22,7 +22,7 @@ Die Blätter laufen im Uhrzeigersinn von oben links:
 3. **Notgroschen** – Bernstein `#f59e0b`
 4. **Freizeit** – Lila `#a855f7`
 
-Auf farbigem Hintergrund gibt es eine einfarbige Variante (`<LogoMark mono />`). Die Vorlage des Logos liegt unter `docs/brand/vierklee-logo.webp`.
+Auf farbigem Hintergrund gibt es eine einfarbige Variante (`<LogoMark mono />`). Die Vorlage des Logos liegt unter `docs/brand/finanzklee-logo.webp`.
 
 ## Farben
 
@@ -57,4 +57,4 @@ Nutzer können die Akzentfarbe ändern (Klee, Indigo, Violett, Smaragd, Himmelbl
 
 Name, Slogan und Farben stehen in `src/lib/brand.ts`.
 
-> **Vor einer öffentlichen Nutzung:** Prüfe beim DPMA und EUIPO, ob „Vierklee“ als Marke schon geschützt ist, und ob eine passende Domain frei ist.
+> **Vor einer öffentlichen Nutzung:** Prüfe beim DPMA und EUIPO, ob „FinanzKlee“ als Marke schon geschützt ist, und ob eine passende Domain frei ist.

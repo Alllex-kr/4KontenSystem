@@ -118,7 +118,7 @@ export async function finalizeBankConnection(connectionId: string): Promise<Resu
 
 const linkSchema = z.object({ linkId: z.string(), accountId: z.string().nullable(), syncBalance: z.boolean() });
 
-/** Bankkonto einem Vierklee-Konto zuordnen. Pro Vierklee-Konto ist nur ein Bankkonto erlaubt. */
+/** Bankkonto einem FinanzKlee-Konto zuordnen. Pro FinanzKlee-Konto ist nur ein Bankkonto erlaubt. */
 export async function updateBankLink(input: z.input<typeof linkSchema>): Promise<Result> {
   const t = await getT();
   const user = await requireFeature("bank.connect");
@@ -129,7 +129,7 @@ export async function updateBankLink(input: z.input<typeof linkSchema>): Promise
   if (!link) return { error: t("Konto nicht gefunden.") };
   if (accountId) {
     const acc = await prisma.account.findFirst({ where: { id: accountId, userId: user.id } });
-    if (!acc) return { error: t("Vierklee-Konto nicht gefunden.") };
+    if (!acc) return { error: t("FinanzKlee-Konto nicht gefunden.") };
   }
   await prisma.$transaction([
     ...(accountId
@@ -235,7 +235,7 @@ export async function syncBankConnection(connectionId: string): Promise<Result &
       imported: plan.length,
       message:
         mapped.length === 0
-          ? t("Ordne zuerst mindestens ein Bankkonto einem Vierklee-Konto zu.")
+          ? t("Ordne zuerst mindestens ein Bankkonto einem FinanzKlee-Konto zu.")
           : t("{n} neue Umsätze übernommen.", { n: plan.length }) +
             (ai.categories.size ? " ✨ " + t("{n} davon hat Claude eingeordnet.", { n: ai.categories.size }) : "") +
             (ai.error ? ` (${t("KI")}: ${t(ai.error)})` : ""),

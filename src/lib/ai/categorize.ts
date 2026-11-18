@@ -62,7 +62,7 @@ const CATEGORY_HINTS: Record<Category, string> = {
 };
 
 /** Feste Anweisung (wird gecacht, darf sich zwischen Anfragen nicht ändern). */
-export const SYSTEM_PROMPT = `Du ordnest Kontoumsätze von Studierenden in Deutschland festen Kategorien zu. Die App heißt Vierklee.
+export const SYSTEM_PROMPT = `Du ordnest Kontoumsätze von Studierenden in Deutschland festen Kategorien zu. Die App heißt FinanzKlee.
 
 Kategorien:
 ${CATEGORIES.map((c) => `- ${c}: ${CATEGORY_HINTS[c]}`).join("\n")}

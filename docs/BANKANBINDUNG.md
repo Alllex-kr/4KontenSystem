@@ -1,15 +1,15 @@
 # Bankanbindung (optional)
 
-Vierklee kann Kontostände und Umsätze direkt von der Bank holen. Das läuft über einen **lizenzierten Kontoinformationsdienst** nach PSD2. Vorbereitet ist **finAPI**, der Code ist aber so aufgebaut, dass sich später andere Anbieter (Tink, Enable Banking, …) ergänzen lassen (`src/lib/banking/types.ts`).
+FinanzKlee kann Kontostände und Umsätze direkt von der Bank holen. Das läuft über einen **lizenzierten Kontoinformationsdienst** nach PSD2. Vorbereitet ist **finAPI**, der Code ist aber so aufgebaut, dass sich später andere Anbieter (Tink, Enable Banking, …) ergänzen lassen (`src/lib/banking/types.ts`).
 
 Ohne Zugangsdaten läuft eine **Demo-Bank**: Freigabe, Kontozuordnung und Synchronisierung funktionieren mit erfundenen Daten.
 
 ## So funktioniert es
 
 1. Der Nutzer klickt unter **Bankkonten** auf **Bank verbinden**.
-2. Vierklee legt bei finAPI einen technischen Benutzer an. Dessen zufälliges Passwort wird **AES-256-GCM-verschlüsselt** gespeichert (`ProviderIdentity`).
-3. Der Nutzer wird zum **finAPI Web Form** weitergeleitet, wählt seine Bank und meldet sich **dort** an (inkl. SCA, z. B. pushTAN). Vierklee sieht die Bank-Zugangsdaten nie.
-4. Zurück in Vierklee (`/bankkonten/zurueck`) werden die Konten geladen. Das erste Girokonto wird dem Fixkostenkonto zugeordnet, alles andere ordnet der Nutzer selbst zu.
+2. FinanzKlee legt bei finAPI einen technischen Benutzer an. Dessen zufälliges Passwort wird **AES-256-GCM-verschlüsselt** gespeichert (`ProviderIdentity`).
+3. Der Nutzer wird zum **finAPI Web Form** weitergeleitet, wählt seine Bank und meldet sich **dort** an (inkl. SCA, z. B. pushTAN). FinanzKlee sieht die Bank-Zugangsdaten nie.
+4. Zurück in FinanzKlee (`/bankkonten/zurueck`) werden die Konten geladen. Das erste Girokonto wird dem Fixkostenkonto zugeordnet, alles andere ordnet der Nutzer selbst zu.
 5. **Jetzt synchronisieren** stößt ein Update bei der Bank an (`/api/tasks/backgroundUpdate`). Verlangt die Bank eine neue Freigabe, wird der Nutzer erneut zum Web Form geschickt. Danach werden Salden übernommen und neue Umsätze kategorisiert importiert (beim ersten Mal 90 Tage). Duplikate werden über die Umsatz-ID der Bank erkannt.
 
 ## finAPI-Sandbox einrichten
@@ -41,12 +41,12 @@ Ohne Zugangsdaten läuft eine **Demo-Bank**: Freigabe, Kontozuordnung und Synchr
 | Token-Pfad `/api/v2/oauth/token` (mit Fallback `/oauth/token`), `POST /api/v2/users`, `GET /api/v2/transactions` und dessen Parameter, `DELETE /api/v2/bankConnections/{id}`, Feldnamen von Konten und Umsätzen | **nicht bestätigt**: Die Access-Spezifikation war nicht abrufbar. Der Code fängt fehlende Felder ab. Bitte einmal mit der Sandbox durchtesten. |
 | Gesamter Ablauf | mit der Demo-Bank im Browser getestet, finAPI-Client mit nachgebauten Antworten (Unit-Tests) |
 
-Auf `localhost` (http) sendet Vierklee die Rücksprung-Adresse als URL-Parameter am Web Form mit. finAPI verlangt für `redirectUrl` im Request HTTPS. Klappt der automatische Rücksprung lokal nicht, öffne einfach wieder Vierklee: unter **Bankkonten → Nicht abgeschlossene Verbindungen → Status prüfen** geht es weiter.
+Auf `localhost` (http) sendet FinanzKlee die Rücksprung-Adresse als URL-Parameter am Web Form mit. finAPI verlangt für `redirectUrl` im Request HTTPS. Klappt der automatische Rücksprung lokal nicht, öffne einfach wieder FinanzKlee: unter **Bankkonten → Nicht abgeschlossene Verbindungen → Status prüfen** geht es weiter.
 
 ## Bevor echte Nutzer echte Konten verbinden
 
-- **Lizenz/Vertrag:** Für den Live-Betrieb ist ein Lizenzvertrag mit finAPI nötig (bzw. mit einem anderen lizenzierten Anbieter). Ohne eigene BaFin-Lizenz arbeitet Vierklee unter der Lizenz des Anbieters, die Bedingungen klärt der Vertrag.
+- **Lizenz/Vertrag:** Für den Live-Betrieb ist ein Lizenzvertrag mit finAPI nötig (bzw. mit einem anderen lizenzierten Anbieter). Ohne eigene BaFin-Lizenz arbeitet FinanzKlee unter der Lizenz des Anbieters, die Bedingungen klärt der Vertrag.
 - **Kosten:** Anbieter rechnen meist pro verbundenem Nutzer ab. Preise beim Anbieter anfragen.
-- **Datenschutz (DSGVO):** Datenschutzerklärung, Auftragsverarbeitungsvertrag mit dem Anbieter, Hosting in der EU, Löschkonzept (Trennen löscht die Verbindung beim Anbieter, importierte Umsätze bleiben in Vierklee).
+- **Datenschutz (DSGVO):** Datenschutzerklärung, Auftragsverarbeitungsvertrag mit dem Anbieter, Hosting in der EU, Löschkonzept (Trennen löscht die Verbindung beim Anbieter, importierte Umsätze bleiben in FinanzKlee).
 - **Sicherheit:** HTTPS, sichere Aufbewahrung von `.env`/Schlüssel, Login-Schutz gegen Brute Force, ggf. Sicherheitsprüfung.
 - **PSD2-Freigabe:** Banken verlangen alle 90 bis 180 Tage eine neue Bestätigung. Ohne den Nutzer sind laut finAPI-Doku bis zu 4 Aktualisierungen pro Tag möglich.

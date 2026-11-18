@@ -150,7 +150,7 @@ export function AnpassenClient({ appearance, accounts }: { appearance: Appearanc
         <p className="mt-2 text-xs text-muted">
           {t("„Automatisch“ folgt der Einstellung „Bewegung reduzieren“ deines Geräts.")}
           {deviceReduced
-            ? t(" Dein Gerät hat sie eingeschaltet: Bei „Automatisch“ blendet Vierklee deshalb nur weich über, ohne Bewegung. Wähle „Immer an“ für alle Effekte (Gleiten, Hochzählen, Kleeblatt-Drehung).")
+            ? t(" Dein Gerät hat sie eingeschaltet: Bei „Automatisch“ blendet FinanzKlee deshalb nur weich über, ohne Bewegung. Wähle „Immer an“ für alle Effekte (Gleiten, Hochzählen, Kleeblatt-Drehung).")
             : t(" Dein Gerät erlaubt Animationen, alle Effekte sind aktiv.")}
         </p>
       </Card>
@@ -182,7 +182,7 @@ export function AnpassenClient({ appearance, accounts }: { appearance: Appearanc
         </Link>
       </Card>
 
-      <Card title={t("Über Vierklee")}>
+      <Card title={t("Über FinanzKlee")}>
         <div className="flex items-center gap-4">
           <LogoMark size={56} />
           <p className="text-sm text-muted">

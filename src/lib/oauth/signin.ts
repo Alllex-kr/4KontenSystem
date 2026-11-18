@@ -5,7 +5,7 @@ import { displayName, type GoogleProfile } from "./google";
 export type OAuthResult = { ok: true; userId: string; isNew: boolean } | { ok: false; error: string };
 
 /**
- * Findet oder erstellt das Vierklee-Konto zu einem Google-Profil:
+ * Findet oder erstellt das FinanzKlee-Konto zu einem Google-Profil:
  * 1. Schon verknüpft → dieses Konto.
  * 2. Konto mit derselben (von Google bestätigten) E-Mail → verknüpfen.
  * 3. Sonst neues Konto ohne Passwort.

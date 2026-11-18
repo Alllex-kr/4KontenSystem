@@ -81,7 +81,7 @@ export default async function EinstellungenPage() {
               </span>
               <p className="min-w-0 flex-1 text-sm">
                 <span className="block font-bold">{ai.planName ? t("In deinem Abo „{plan}“ nicht enthalten", { plan: ai.planName }) : t("In deinem Abo nicht enthalten")}</span>
-                <span className="block text-muted">{t("Die KI-Funktionen gibt es mit einem Abo, das sie enthält, zum Beispiel Vierklee Plus.")}</span>
+                <span className="block text-muted">{t("Die KI-Funktionen gibt es mit einem Abo, das sie enthält, zum Beispiel FinanzKlee Plus.")}</span>
               </p>
             </div>
           ) : !ai.available ? (
@@ -95,7 +95,7 @@ export default async function EinstellungenPage() {
                 <span className="text-sm">
                   <span className="block font-bold">{t("Ich möchte unklare Umsätze von Claude einordnen lassen")}</span>
                   <span className="block text-muted">
-                    {t("Dafür werden nur Empfänger, Verwendungszweck (ohne IBANs, lange Nummern und E-Mail-Adressen) und Betrag an Anthropic übermittelt. Gleiche Empfänger werden nur einmal gefragt, das Ergebnis merkt sich Vierklee als Regel.")}
+                    {t("Dafür werden nur Empfänger, Verwendungszweck (ohne IBANs, lange Nummern und E-Mail-Adressen) und Betrag an Anthropic übermittelt. Gleiche Empfänger werden nur einmal gefragt, das Ergebnis merkt sich FinanzKlee als Regel.")}
                   </span>
                 </span>
               </label>

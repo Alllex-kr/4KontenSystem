@@ -181,7 +181,7 @@ export function ReserveClient({ items, summary, accountNames }: { items: Reserve
       <section className="space-y-3">
         <div>
           <h2 className="text-lg font-black">{t("Posten mit unregelmäßiger Wiederholung")}</h2>
-          <p className="text-sm text-muted">{t("Dokumentiere deine Käufe (z. B. jeden Urlaub). Vierklee rechnet daraus das durchschnittliche Intervall und den tatsächlichen Betrag pro Monat aus.")}</p>
+          <p className="text-sm text-muted">{t("Dokumentiere deine Käufe (z. B. jeden Urlaub). FinanzKlee rechnet daraus das durchschnittliche Intervall und den tatsächlichen Betrag pro Monat aus.")}</p>
         </div>
         {irregular.length === 0 ? (
           <EmptyState icon={<Shuffle size={36} />} title={t("Noch keine unregelmäßigen Posten")} text={t("Lege unten einen Posten an, z. B. „Urlaub“, und trage deine bisherigen Reisen ein.")} />
@@ -243,7 +243,7 @@ function ItemForm({ item, onDone }: { item?: ReserveItemView; onDone?: () => voi
       </div>
       <p className="text-xs text-muted sm:col-span-2 lg:col-span-4">
         {kind === "PLANNED"
-          ? t("Leer gelassen, nimmt Vierklee das Intervall aus deinen letzten zwei Käufen und den Betrag aus dem letzten Kauf.")
+          ? t("Leer gelassen, nimmt FinanzKlee das Intervall aus deinen letzten zwei Käufen und den Betrag aus dem letzten Kauf.")
           : t("Intervall und Betrag sind deine Schätzung. Mit genug dokumentierten Käufen kannst du auf den tatsächlichen Betrag umschalten.")}
       </p>
       <SubmitButton className="btn">

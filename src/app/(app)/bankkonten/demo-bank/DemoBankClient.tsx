@@ -27,7 +27,7 @@ export function DemoBankClient({ connectionId, accounts }: { connectionId: strin
         <div className="flex items-center gap-3 bg-slate-800 px-5 py-4 text-white">
           <Building2 size={24} />
           <div>
-            <p className="font-black">{t("Vierklee Demo-Bank")}</p>
+            <p className="font-black">{t("FinanzKlee Demo-Bank")}</p>
             <p className="text-xs opacity-75">{t("Simulation · keine echte Bank")}</p>
           </div>
         </div>
@@ -37,7 +37,7 @@ export function DemoBankClient({ connectionId, accounts }: { connectionId: strin
             {t("Das ist eine Demo. Bei einer echten Bank meldest du dich hier mit deinen Bank-Zugangsdaten an und bestätigst z. B. per pushTAN.")}
           </p>
           <div>
-            <p className="font-bold">{t("Vierklee möchte lesend zugreifen auf:")}</p>
+            <p className="font-bold">{t("FinanzKlee möchte lesend zugreifen auf:")}</p>
             <ul className="mt-2 space-y-1.5 text-sm">
               {accounts.map((a) => (
                 <li key={a} className="flex items-center gap-2"><Check size={16} className="text-good" /> {a}{t(": Kontostand und Umsätze")}</li>

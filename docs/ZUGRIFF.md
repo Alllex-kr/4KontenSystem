@@ -1,6 +1,6 @@
 # Zugriff, Berechtigungen und Abos
 
-Vierklee regelt den Zugriff auf Funktionen ähnlich wie Salesforce: **Was ein Nutzer in keinem seiner Berechtigungssätze hat, darf er nicht.**
+FinanzKlee regelt den Zugriff auf Funktionen ähnlich wie Salesforce: **Was ein Nutzer in keinem seiner Berechtigungssätze hat, darf er nicht.**
 
 ## Bausteine
 
@@ -35,7 +35,7 @@ Ein Nutzer darf alles, was über Abo, Personengruppen oder direkte Zuweisungen b
 
 Immer frei (Kern des Vier-Konten-Systems): Dashboard, Konten, Buchungen, Fixe Zahlungen, Einstellungen.
 
-Abos: **Kostenlos** = Daten-Import + Planung + Personalisierung. **Vierklee Plus** = dasselbe + KI-Paket. **Administrator** = Vollzugriff auf alles, auch auf künftige Funktionen (System-Abo, nicht buchbar, nicht löschbar).
+Abos: **Kostenlos** = Daten-Import + Planung + Personalisierung. **FinanzKlee Plus** = dasselbe + KI-Paket. **Administrator** = Vollzugriff auf alles, auch auf künftige Funktionen (System-Abo, nicht buchbar, nicht löschbar).
 
 ## Admin werden
 
@@ -53,7 +53,7 @@ Admins sind im Abo **„Administrator“**. Es gibt automatisch jede Berechtigun
    - Seite: `await requirePermission("budget.export")`
    - Server Action: `if (!(await can(user.id, "budget.export"))) return { error: "…" }`
    - Oberfläche ein-/ausblenden: `can(...)` auf dem Server auswerten und als Prop weitergeben
-3. Beim nächsten Start legt Vierklee automatisch den Satz dafür an. Im Adminbereich packst du ihn in eine Satzgruppe (oder gibst ihn direkt einem Abo, einer Personengruppe oder Person). Bis dahin ist die Funktion für alle gesperrt.
+3. Beim nächsten Start legt FinanzKlee automatisch den Satz dafür an. Im Adminbereich packst du ihn in eine Satzgruppe (oder gibst ihn direkt einem Abo, einer Personengruppe oder Person). Bis dahin ist die Funktion für alle gesperrt.
 
 Wichtig: Immer auf dem **Server** prüfen. Ausgeblendete Knöpfe allein schützen nichts.
 

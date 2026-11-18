@@ -24,16 +24,17 @@ export function LogoMark({ size = 32, mono = false, className = "" }: { size?: n
   );
 }
 
-/** Bildmarke + Wortmarke "vierklee". */
+/** Bildmarke + Wortmarke "FinanzKlee". */
 export function Logo({ size = 32, className = "", tagline = false }: { size?: number; className?: string; tagline?: boolean }) {
   const t = useT();
   return (
     <span className={`leaf-spin inline-flex items-center gap-2.5 ${className}`}>
       <LogoMark size={size} />
       <span className="flex flex-col leading-none">
-        <span className="font-black tracking-tight" style={{ fontSize: size * 0.72 }} aria-label={BRAND.name}>
-          <span className="text-fg">vier</span>
-          <span style={{ color: "var(--brand-green)" }}>klee</span>
+        {/* Etwas kleiner als früher, weil "FinanzKlee" länger ist als "vierklee" */}
+        <span className="font-black tracking-tight whitespace-nowrap" style={{ fontSize: size * 0.66 }} aria-label={BRAND.name}>
+          <span className="text-fg">Finanz</span>
+          <span style={{ color: "var(--brand-green)" }}>Klee</span>
         </span>
         {tagline && <span className="mt-1 text-[11px] font-semibold text-muted">{t(BRAND.tagline)}</span>}
       </span>

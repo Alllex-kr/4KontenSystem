@@ -87,7 +87,7 @@ export function profileFromIdToken(claims: IdTokenClaims, expected: { clientId: 
   const now = Math.floor((expected.now ?? Date.now()) / 1000);
   if (!claims.iss || !ISSUERS.includes(claims.iss)) throw new Error(msg("ID-Token stammt nicht von Google."));
   const aud = Array.isArray(claims.aud) ? claims.aud : [claims.aud];
-  if (!aud.includes(expected.clientId)) throw new Error(msg("ID-Token ist nicht für Vierklee ausgestellt."));
+  if (!aud.includes(expected.clientId)) throw new Error(msg("ID-Token ist nicht für FinanzKlee ausgestellt."));
   if (!claims.exp || claims.exp < now - 60) throw new Error(msg("ID-Token ist abgelaufen."));
   if (!claims.nonce || claims.nonce !== expected.nonce) throw new Error(msg("Anmeldung passt nicht zur Anfrage (nonce)."));
   if (!claims.sub || !claims.email) throw new Error(msg("Google hat keine E-Mail-Adresse übermittelt."));

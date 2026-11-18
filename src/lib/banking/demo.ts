@@ -73,7 +73,7 @@ export const demoProvider: BankProvider = {
     return { redirectUrl: `/bankkonten/demo-bank?c=${encodeURIComponent(ctx.connectionId)}`, pendingFormId: formId };
   },
   async checkImport(ctx, pendingFormId) {
-    if (pendingFormId.startsWith("done:")) return { status: "completed", externalConnectionId: ctx.connectionId, bankName: "Vierklee Demo-Bank" };
+    if (pendingFormId.startsWith("done:")) return { status: "completed", externalConnectionId: ctx.connectionId, bankName: "FinanzKlee Demo-Bank" };
     if (pendingFormId.startsWith("aborted:")) return { status: "failed", message: "Die Freigabe wurde abgebrochen." };
     return { status: "pending", message: "Warte auf deine Freigabe bei der Demo-Bank …" };
   },

@@ -193,7 +193,7 @@ export function AusgleichPanel({ ausgleich, minBufferCents, accounts, suggestedS
           </button>
         </div>
       )}
-      <p className="text-xs text-muted">{t("„Als erledigt buchen“ verbucht die Umbuchung in Vierklee. Die echte Überweisung machst du in deiner Bank-App.")}</p>
+      <p className="text-xs text-muted">{t("„Als erledigt buchen“ verbucht die Umbuchung in FinanzKlee. Die echte Überweisung machst du in deiner Bank-App.")}</p>
     </div>
   );
 }

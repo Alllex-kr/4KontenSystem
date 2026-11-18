@@ -4,7 +4,7 @@ import { msg } from "../i18n/translate";
 //
 //   Berechtigung  →  Berechtigungssatz  →  Satzgruppe  →  Abo / Personengruppe / Person
 //
-// Für jede Berechtigung legt Vierklee automatisch einen eigenen Berechtigungssatz an
+// Für jede Berechtigung legt FinanzKlee automatisch einen eigenen Berechtigungssatz an
 // (eine Funktion = ein Satz). Zusammengehörige Sätze bündeln die Satzgruppen unten.
 //
 // Neue Funktion, die man freischalten können soll?
@@ -102,7 +102,7 @@ export const LOCKED_SET_GROUP_KEYS: readonly string[] = SYSTEM_SET_GROUPS.filter
 /** Start-Abos. Werden nur angelegt, solange es noch gar keine Abos gibt. */
 export const DEFAULT_PLANS = [
   { key: "free", name: "Kostenlos", description: "Das Vier-Konten-System ohne KI.", isDefault: true, sortOrder: 0 },
-  { key: "plus", name: "Vierklee Plus", description: "Alles aus Kostenlos und dazu die KI-Funktionen.", isDefault: false, sortOrder: 1 },
+  { key: "plus", name: "FinanzKlee Plus", description: "Alles aus Kostenlos und dazu die KI-Funktionen.", isDefault: false, sortOrder: 1 },
 ];
 
 /**

@@ -133,7 +133,7 @@ export function BankClient({
         </Card>
         <Card title={t("Sicher verbunden")}>
           <ul className="space-y-2.5 text-sm text-muted">
-            <li className="flex gap-2"><KeyRound size={17} className="mt-0.5 shrink-0 text-good" />{" "}{t("Deine Bank-Zugangsdaten gibst du nur bei der Bank bzw. dem lizenzierten Anbieter ein. Vierklee sieht sie nie.")}</li>
+            <li className="flex gap-2"><KeyRound size={17} className="mt-0.5 shrink-0 text-good" />{" "}{t("Deine Bank-Zugangsdaten gibst du nur bei der Bank bzw. dem lizenzierten Anbieter ein. FinanzKlee sieht sie nie.")}</li>
             <li className="flex gap-2"><ShieldCheck size={17} className="mt-0.5 shrink-0 text-good" />{" "}{t("Nur Lesezugriff: Kontostand und Umsätze. Überweisungen sind nicht möglich.")}</li>
             <li className="flex gap-2"><Lock size={17} className="mt-0.5 shrink-0 text-good" />{" "}{t("Du kannst die Verbindung jederzeit trennen.")}</li>
           </ul>
@@ -153,7 +153,7 @@ export function BankClient({
             action={<span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-black ${STATUS[c.status]?.cls ?? ""}`}>{STATUS[c.status] ? t(STATUS[c.status].label) : c.status}</span>}
           >
             {c.lastError && <div className="mb-4"><Alert>{c.lastError}</Alert></div>}
-            <p className="mb-2 text-sm font-semibold">{t("Welches Bankkonto gehört zu welchem Vierklee-Konto?")}</p>
+            <p className="mb-2 text-sm font-semibold">{t("Welches Bankkonto gehört zu welchem FinanzKlee-Konto?")}</p>
             <ul className="divide-y divide-line">
               {c.accounts.map((l) => (
                 <LinkRow key={l.id} link={l} accounts={accounts} />
@@ -168,7 +168,7 @@ export function BankClient({
               </button>
             </div>
             <p className="mt-3 text-xs text-muted">
-              {t("Banken verlangen spätestens alle 90 bis 180 Tage eine erneute Bestätigung. Vierklee sagt dir dann Bescheid.")}
+              {t("Banken verlangen spätestens alle 90 bis 180 Tage eine erneute Bestätigung. FinanzKlee sagt dir dann Bescheid.")}
             </p>
           </Card>
         ))
@@ -224,7 +224,7 @@ function LinkRow({ link, accounts }: { link: Conn["accounts"][number]; accounts:
           <select
             className="input"
             value={accountId}
-            aria-label={t("Vierklee-Konto für {name}", { name: link.name })}
+            aria-label={t("FinanzKlee-Konto für {name}", { name: link.name })}
             onChange={(e) => {
               setAccountId(e.target.value);
               save({ accountId: e.target.value, syncBalance });

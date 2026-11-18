@@ -224,7 +224,7 @@ export function DashboardClient({
         <>
           {data.showWelcome && data.isEmpty && (
             <Alert tone="info">
-              {rich(t("Willkommen bei Vierklee! Deine vier Konten sind angelegt. Trag als Nächstes Einkommen und Fixkosten unter <link>Fixe Zahlungen</link> ein, oder probier alles mit Beispieldaten aus."), {
+              {rich(t("Willkommen bei FinanzKlee! Deine vier Konten sind angelegt. Trag als Nächstes Einkommen und Fixkosten unter <link>Fixe Zahlungen</link> ein, oder probier alles mit Beispieldaten aus."), {
                 link: (x) => <Link href="/zahlungen" className="font-bold underline">{x}</Link>,
               })}
             </Alert>

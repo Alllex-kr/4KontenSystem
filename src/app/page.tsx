@@ -45,7 +45,7 @@ export default async function Home() {
               {rich(t("Glück ist <green>planbar.</green>"), { green: (x) => <span style={{ color: "var(--brand-green)" }}>{x}</span> })}
             </h1>
             <p className="mt-5 max-w-xl text-lg text-muted">
-              {t("Vierklee teilt dein Geld auf vier Konten auf. So weißt du jederzeit, was du ausgeben darfst, ob die Miete gedeckt ist und wann du dein Sparziel erreichst.")}
+              {t("FinanzKlee teilt dein Geld auf vier Konten auf. So weißt du jederzeit, was du ausgeben darfst, ob die Miete gedeckt ist und wann du dein Sparziel erreichst.")}
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link href="/register" className="btn px-6 py-3 text-base">{t("Jetzt kostenlos starten")}</Link>
@@ -95,7 +95,7 @@ export default async function Home() {
           <div className="stagger grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {[
               { icon: LayoutGrid, title: t("Dein Dashboard"), text: t("Widgets verschieben, vergrößern, ausblenden. Genau so, wie du es magst.") },
-              { icon: BellRing, title: t("Frühwarnung"), text: t("Vierklee warnt dich, bevor dein Konto unter den Mindestpuffer rutscht.") },
+              { icon: BellRing, title: t("Frühwarnung"), text: t("FinanzKlee warnt dich, bevor dein Konto unter den Mindestpuffer rutscht.") },
               { icon: Smartphone, title: t("Für unterwegs"), text: t("Ausgabe in 3 Sekunden buchen. Als App auf dem Homescreen, auch auf Foldables.") },
               { icon: Lock, title: t("Deine Daten"), text: t("Kein Bankzugang nötig. Beträge auf Knopfdruck verbergen.") },
             ].map(({ icon: Icon, title, text }) => (

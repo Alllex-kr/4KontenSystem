@@ -11,7 +11,7 @@
       "port": 3000
     },
     {
-      "name": "vierklee-test",
+      "name": "finanzklee-test",
       "runtimeExecutable": "npx",
       "runtimeArgs": [
         "next",

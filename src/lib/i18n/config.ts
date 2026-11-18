@@ -1,4 +1,4 @@
-// Sprachen von Vierklee. Deutsch ist die Ausgangssprache: Texte stehen im Code auf Deutsch
+// Sprachen von FinanzKlee. Deutsch ist die Ausgangssprache: Texte stehen im Code auf Deutsch
 // (t("Speichern")), die anderen Sprachen kommen aus src/lib/i18n/messages/<sprache>.ts.
 
 export const LOCALES = ["de", "en", "ru", "tr", "es"] as const;

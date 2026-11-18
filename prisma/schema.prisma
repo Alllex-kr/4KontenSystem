@@ -224,7 +224,7 @@ model BankConnection {
   @@index([userId])
 }
 
-/// Ein Konto bei der Bank, optional einem Vierklee-Konto zugeordnet.
+/// Ein Konto bei der Bank, optional einem FinanzKlee-Konto zugeordnet.
 model BankAccountLink {
   id           String         @id @default(cuid())
   connectionId String

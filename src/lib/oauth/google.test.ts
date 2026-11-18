@@ -87,7 +87,7 @@ describe("Google: ID-Token prüfen", () => {
   });
   it("lehnt fremden Aussteller, fremde App, Ablauf und falsche nonce ab", () => {
     expect(() => check({ ...good, iss: "https://evil.example" })).toThrow(/Google/);
-    expect(() => check({ ...good, aud: "andere-app" })).toThrow(/Vierklee/);
+    expect(() => check({ ...good, aud: "andere-app" })).toThrow(/FinanzKlee/);
     expect(() => check({ ...good, exp: now / 1000 - 3600 })).toThrow(/abgelaufen/);
     expect(() => check({ ...good, nonce: "falsch" })).toThrow(/nonce/);
     expect(() => check({ ...good, email: undefined })).toThrow(/E-Mail/);

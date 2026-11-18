@@ -272,7 +272,7 @@ export function ImportClient({ accounts, rules, ai }: { accounts: AccountLite[];
 
         <p className="flex items-start gap-2 text-sm text-muted">
           <ShieldCheck size={18} className="mt-0.5 shrink-0 text-good" />
-          {t("Die Datei wird nur in deinem Browser gelesen. An Vierklee gehen ausschließlich die Umsätze, die du am Ende importierst.")}
+          {t("Die Datei wird nur in deinem Browser gelesen. An FinanzKlee gehen ausschließlich die Umsätze, die du am Ende importierst.")}
         </p>
 
         <div className="grid gap-4 md:grid-cols-2">
@@ -409,7 +409,7 @@ export function ImportClient({ accounts, rules, ai }: { accounts: AccountLite[];
               <span>
                 <span className="font-bold">{t("Neue Umsätze verrechnen")}</span>{" "}
                 <span className="tabular text-muted">({formatCents(income - expense)})</span>
-                <span className="block text-xs text-muted">{t("Wenn du den Kontostand in Vierklee seit diesen Umsätzen nicht abgeglichen hast.")}</span>
+                <span className="block text-xs text-muted">{t("Wenn du den Kontostand in FinanzKlee seit diesen Umsätzen nicht abgeglichen hast.")}</span>
               </span>
             </label>
             <label className="flex items-start gap-3 rounded-xl border border-line p-3 has-[:checked]:border-accent has-[:checked]:bg-accent-soft">
@@ -474,7 +474,7 @@ export function ImportClient({ accounts, rules, ai }: { accounts: AccountLite[];
                 {t("Alle neuen auswählen")}
               </label>
               <p className="flex items-center gap-1.5 text-xs text-muted">
-                <Info size={14} />{" "}{t("Kategorie ändern = Vierklee merkt sich das für diesen Empfänger")}
+                <Info size={14} />{" "}{t("Kategorie ändern = FinanzKlee merkt sich das für diesen Empfänger")}
               </p>
             </div>
             <ul className="stagger divide-y divide-line">
