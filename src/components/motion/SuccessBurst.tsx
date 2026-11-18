@@ -1,6 +1,6 @@
 import { BRAND } from "@/lib/brand";
 
-const LEAF = "M30 30H17A13 13 0 0 1 4 17A13 13 0 0 1 17 4A13 13 0 0 1 30 17Z";
+import { LEAF } from "@/components/brand/leaf";
 
 /** Erfolgs-Moment: Haken, der sich zeichnet, und kleine Kleeblätter, die herausfliegen. */
 export function SuccessBurst({ size = 64, className = "" }: { size?: number; className?: string }) {

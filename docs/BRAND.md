@@ -11,7 +11,7 @@ Ein vierblättriges Kleeblatt ist ein Glückssymbol, und jedes seiner vier Blät
 
 | Element | Beschreibung |
 | --- | --- |
-| Bildmarke | Vier Blätter (Dreiviertelkreise mit Spitze zur Mitte) und ein geschwungener Stiel |
+| Bildmarke | Vier Herzen als Kleeblatt, jedes um 45° gedreht, Spitzen zeigen zur Mitte (seit 19.11.2026, ohne Stiel) |
 | Wortmarke | `vier` in Textfarbe und `klee` in Klee-Grün, kleingeschrieben, Nunito Black |
 | Dateien | `src/components/brand/Logo.tsx` (React), `public/icon.svg` (App-Icon/Favicon) |
 
@@ -22,7 +22,7 @@ Die Blätter laufen im Uhrzeigersinn von oben links:
 3. **Notgroschen** – Bernstein `#f59e0b`
 4. **Freizeit** – Lila `#a855f7`
 
-Der Stiel ist immer Klee-Grün `#15803d`. Auf farbigem Hintergrund gibt es eine einfarbige Variante (`<LogoMark mono />`).
+Auf farbigem Hintergrund gibt es eine einfarbige Variante (`<LogoMark mono />`). Die Vorlage des Logos liegt unter `docs/brand/vierklee-logo.webp`.
 
 ## Farben
 

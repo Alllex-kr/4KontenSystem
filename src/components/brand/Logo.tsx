@@ -2,13 +2,11 @@
 
 import { BRAND } from "@/lib/brand";
 import { useT } from "@/lib/i18n/client";
-
-// Ein Blatt (oben links): Dreiviertelkreis mit Spitze zur Mitte.
-const LEAF = "M30 30H17A13 13 0 0 1 4 17A13 13 0 0 1 17 4A13 13 0 0 1 30 17Z";
+import { LEAF } from "./leaf";
 
 /**
- * Bildmarke: vierblättriges Kleeblatt.
- * Blätter im Uhrzeigersinn: Fixkosten (blau), Sparen (grün), Notgroschen (gelb), Freizeit (lila).
+ * Bildmarke: vierblättriges Kleeblatt aus vier Herzen.
+ * Blätter im Uhrzeigersinn ab oben links: Fixkosten (blau), Sparen (grün), Notgroschen (orange), Freizeit (lila).
  */
 export function LogoMark({ size = 32, mono = false, className = "" }: { size?: number; mono?: boolean; className?: string }) {
   const colors = mono ? ["currentColor", "currentColor", "currentColor", "currentColor"] : BRAND.leaves;
@@ -22,7 +20,6 @@ export function LogoMark({ size = 32, mono = false, className = "" }: { size?: n
           </g>
         ))}
       </g>
-      <path d="M32 36Q32.5 52 37 62" fill="none" stroke={mono ? "currentColor" : BRAND.primary} strokeWidth="3.2" strokeLinecap="round" />
     </svg>
   );
 }
