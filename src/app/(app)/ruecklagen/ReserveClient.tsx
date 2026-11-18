@@ -19,7 +19,8 @@ import { UndoDelete } from "@/components/UndoDelete";
 import { Alert, Card, EmptyState, ProgressBar } from "@/components/ui";
 import { AnimatedNumber } from "@/components/motion/AnimatedNumber";
 import { useToast } from "@/components/Toaster";
-import { centsToInput, formatCents, formatDate } from "@/lib/format";
+import { centsToInput, formatCents, formatDate, formatNumber } from "@/lib/format";
+import { useT } from "@/lib/i18n/client";
 
 export type ReserveItemView = {
   id: string;
@@ -57,13 +58,15 @@ type Summary = {
   allocatedCents: number;
 };
 
-const fmtMonths = (m: number | null) => (m == null ? "–" : m === 1 ? "monatlich" : m === 12 ? "jährlich" : `alle ${String(m).replace(".", ",")} Monate`);
+const fmtMonths = (m: number | null, t: (k: string, v?: Record<string, string | number>) => string) =>
+  m == null ? "–" : m === 1 ? t("monatlich") : m === 12 ? t("jährlich") : t("alle {n} Monate", { n: formatNumber(m, Number.isInteger(m) ? 0 : 1) });
 const today = () => {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 };
 
 export function ReserveClient({ items, summary, accountNames }: { items: ReserveItemView[]; summary: Summary; accountNames: { SPAREN: string; NOTGROSCHEN: string } }) {
+  const t = useT();
   const router = useRouter();
   const toast = useToast();
   const [pending, start] = useTransition();
@@ -76,27 +79,27 @@ export function ReserveClient({ items, summary, accountNames }: { items: Reserve
       {/* Zusammenfassung (Excel: "Reserve") */}
       <div className="stagger grid gap-4 md:grid-cols-3">
         <div className="card">
-          <p className="text-xs font-bold uppercase tracking-wide text-muted">Prognose pro Monat</p>
+          <p className="text-xs font-bold uppercase tracking-wide text-muted">{t("Prognose pro Monat")}</p>
           <p className="tabular mt-1 text-2xl font-black"><AnimatedNumber cents={summary.forecastMonthlyCents} /></p>
-          <p className="mt-1 text-xs text-muted">Summe aller Posten (Excel: „Effektiv pro Monat“)</p>
+          <p className="mt-1 text-xs text-muted">{t("Summe aller Posten (Excel: „Effektiv pro Monat“)")}</p>
         </div>
         <div className="card">
-          <p className="text-xs font-bold uppercase tracking-wide text-muted">Festgesetzt pro Monat</p>
+          <p className="text-xs font-bold uppercase tracking-wide text-muted">{t("Festgesetzt pro Monat")}</p>
           <p className={`tabular mt-1 text-2xl font-black ${summary.underplanned ? "text-warn" : ""}`}><AnimatedNumber cents={summary.fixedMonthlyCents} /></p>
           <p className="mt-1 text-xs text-muted">
             {summary.underplanned
-              ? `Zu wenig eingeplant: mehr als ${summary.tolerancePct} % unter der Prognose`
+              ? t("Zu wenig eingeplant: mehr als {tolerancePct} % unter der Prognose", { tolerancePct: summary.tolerancePct })
               : summary.fixedMonthlyCents > 0
-                ? "Dauerauftrag aufs " + summary.accountName
-                : "Noch kein Betrag festgesetzt"}
+                ? t("Dauerauftrag aufs {account}", { account: summary.accountName })
+                : t("Noch kein Betrag festgesetzt")}
           </p>
         </div>
         <div className="card">
-          <p className="text-xs font-bold uppercase tracking-wide text-muted">Soll-Stand heute</p>
+          <p className="text-xs font-bold uppercase tracking-wide text-muted">{t("Soll-Stand heute")}</p>
           <p className="tabular mt-1 text-2xl font-black"><AnimatedNumber cents={summary.sollBalanceCents} /></p>
           <p className={`mt-1 text-xs ${gap > 0 ? "text-warn" : "text-good"}`}>
-            {gap > 0 ? `Auf dem ${summary.accountName} fehlen ${formatCents(gap)}` : `Gedeckt auf dem ${summary.accountName} ✓`}
-            {summary.earmarkedCents > 0 && <span className="text-muted"> (abzgl. {formatCents(summary.earmarkedCents)} für Sparziele)</span>}
+            {gap > 0 ? t("Auf dem {accountName} fehlen {v1}", { accountName: summary.accountName, v1: formatCents(gap) }) : t("Gedeckt auf dem {accountName} ✓", { accountName: summary.accountName })}
+            {summary.earmarkedCents > 0 && <span className="text-muted">{" "}{t("(abzgl. {amount} für Sparziele)", { amount: formatCents(summary.earmarkedCents) })}</span>}
           </p>
         </div>
       </div>
@@ -104,7 +107,7 @@ export function ReserveClient({ items, summary, accountNames }: { items: Reserve
       {summary.underplanned && (
         <Alert>
           <AlertTriangle size={16} className="mr-2 inline" />
-          Aktuell zu wenig eingeplant: Die Prognose liegt bei {formatCents(summary.forecastMonthlyCents)} pro Monat, festgesetzt sind {formatCents(summary.fixedMonthlyCents)}.{" "}
+          {t("Aktuell zu wenig eingeplant: Die Prognose liegt bei {forecast} pro Monat, festgesetzt sind {fixed}.", { forecast: formatCents(summary.forecastMonthlyCents), fixed: formatCents(summary.fixedMonthlyCents) })}{" "}
           <button
             className="font-black underline"
             disabled={pending}
@@ -112,64 +115,64 @@ export function ReserveClient({ items, summary, accountNames }: { items: Reserve
               start(async () => {
                 const r = await applyReserveForecast();
                 router.refresh();
-                toast({ message: r?.success ?? "Übernommen" });
+                toast({ message: r?.success ?? t("Übernommen") });
               })
             }
           >
-            Prognose übernehmen
+            {t("Prognose übernehmen")}
           </button>
         </Alert>
       )}
 
-      <Card title="Monatlicher Betrag" subtitle="Dieser Betrag geht als Dauerauftrag vom Fixkostenkonto auf dein Rücklagen-Konto. Er wird vor Notgroschen, Sparen und Freizeit eingeplant.">
+      <Card title={t("Monatlicher Betrag")} subtitle={t("Dieser Betrag geht als Dauerauftrag vom Fixkostenkonto auf dein Rücklagen-Konto. Er wird vor Notgroschen, Sparen und Freizeit eingeplant.")}>
         <ActionForm action={saveReserveSettings} resetOnSuccess={false} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:items-end">
           <div>
-            <label className="label" htmlFor="monthly">Festgesetzt pro Monat (€)</label>
+            <label className="label" htmlFor="monthly">{t("Festgesetzt pro Monat (€)")}</label>
             <input id="monthly" name="monthly" className="input tabular" inputMode="decimal" defaultValue={centsToInput(summary.fixedMonthlyCents)} />
           </div>
           <div>
-            <label className="label" htmlFor="tolerance">Warnen ab (% unter Prognose)</label>
+            <label className="label" htmlFor="tolerance">{t("Warnen ab (% unter Prognose)")}</label>
             <input id="tolerance" name="tolerance" type="number" min={0} max={50} className="input" defaultValue={summary.tolerancePct} />
           </div>
           <div>
-            <label className="label" htmlFor="accountKind">Rücklagen liegen auf</label>
+            <label className="label" htmlFor="accountKind">{t("Rücklagen liegen auf")}</label>
             <select id="accountKind" name="accountKind" className="input" defaultValue={summary.accountKind}>
               <option value="SPAREN">{accountNames.SPAREN}</option>
               <option value="NOTGROSCHEN">{accountNames.NOTGROSCHEN}</option>
             </select>
           </div>
           <div className="flex gap-2">
-            <SubmitButton className="btn flex-1">Speichern</SubmitButton>
+            <SubmitButton className="btn flex-1">{t("Speichern")}</SubmitButton>
             <button
               type="button"
               className="btn-ghost"
-              title="Prognose übernehmen"
+              title={t("Prognose übernehmen")}
               disabled={pending}
               onClick={() =>
                 start(async () => {
                   const r = await applyReserveForecast();
                   router.refresh();
-                  toast({ message: r?.success ?? "Übernommen" });
+                  toast({ message: r?.success ?? t("Übernommen") });
                 })
               }
             >
-              <Sparkles size={16} /> <span className="hidden xl:inline">Prognose</span>
+              <Sparkles size={16} /> <span className="hidden xl:inline">{t("Prognose")}</span>
             </button>
           </div>
         </ActionForm>
         {summary.allocatedCents < summary.fixedMonthlyCents && (
-          <p className="mt-2 text-xs text-warn">Dein Einkommen reicht nur für {formatCents(summary.allocatedCents)} davon.</p>
+          <p className="mt-2 text-xs text-warn">{t("Dein Einkommen reicht nur für {amount} davon.", { amount: formatCents(summary.allocatedCents) })}</p>
         )}
       </Card>
 
       {/* Posten */}
       <section className="space-y-3">
         <div>
-          <h2 className="text-lg font-black">Posten mit bekannter Wiederholung</h2>
-          <p className="text-sm text-muted">Du weißt, wann und wie viel, z. B. Weihnachtsgeschenke, Semesterticket, Brille.</p>
+          <h2 className="text-lg font-black">{t("Posten mit bekannter Wiederholung")}</h2>
+          <p className="text-sm text-muted">{t("Du weißt, wann und wie viel, z. B. Weihnachtsgeschenke, Semesterticket, Brille.")}</p>
         </div>
         {planned.length === 0 ? (
-          <EmptyState icon={<CalendarClock size={36} />} title="Noch keine geplanten Posten" text="Lege unten einen Posten an, z. B. „Weihnachtsgeschenke, jährlich, 300 €“." />
+          <EmptyState icon={<CalendarClock size={36} />} title={t("Noch keine geplanten Posten")} text={t("Lege unten einen Posten an, z. B. „Weihnachtsgeschenke, jährlich, 300 €“.")} />
         ) : (
           <div className="stagger grid gap-4 lg:grid-cols-2">{planned.map((i) => <ItemCard key={i.id} item={i} />)}</div>
         )}
@@ -177,17 +180,17 @@ export function ReserveClient({ items, summary, accountNames }: { items: Reserve
 
       <section className="space-y-3">
         <div>
-          <h2 className="text-lg font-black">Posten mit unregelmäßiger Wiederholung</h2>
-          <p className="text-sm text-muted">Dokumentiere deine Käufe (z. B. jeden Urlaub). Vierklee rechnet daraus das durchschnittliche Intervall und den tatsächlichen Betrag pro Monat aus.</p>
+          <h2 className="text-lg font-black">{t("Posten mit unregelmäßiger Wiederholung")}</h2>
+          <p className="text-sm text-muted">{t("Dokumentiere deine Käufe (z. B. jeden Urlaub). Vierklee rechnet daraus das durchschnittliche Intervall und den tatsächlichen Betrag pro Monat aus.")}</p>
         </div>
         {irregular.length === 0 ? (
-          <EmptyState icon={<Shuffle size={36} />} title="Noch keine unregelmäßigen Posten" text="Lege unten einen Posten an, z. B. „Urlaub“, und trage deine bisherigen Reisen ein." />
+          <EmptyState icon={<Shuffle size={36} />} title={t("Noch keine unregelmäßigen Posten")} text={t("Lege unten einen Posten an, z. B. „Urlaub“, und trage deine bisherigen Reisen ein.")} />
         ) : (
           <div className="stagger grid gap-4 lg:grid-cols-2">{irregular.map((i) => <ItemCard key={i.id} item={i} />)}</div>
         )}
       </section>
 
-      <Card title="Neuer Posten">
+      <Card title={t("Neuer Posten")}>
         <ItemForm />
       </Card>
     </div>
@@ -195,6 +198,7 @@ export function ReserveClient({ items, summary, accountNames }: { items: Reserve
 }
 
 function ItemForm({ item, onDone }: { item?: ReserveItemView; onDone?: () => void }) {
+  const t = useT();
   const [kind, setKind] = useState<"PLANNED" | "IRREGULAR">(item?.kind ?? "PLANNED");
   return (
     <ActionForm
@@ -209,11 +213,11 @@ function ItemForm({ item, onDone }: { item?: ReserveItemView; onDone?: () => voi
       {item && <input type="hidden" name="id" value={item.id} />}
       <input type="hidden" name="kind" value={kind} />
       <div className="sm:col-span-2 lg:col-span-1">
-        <label className="label" htmlFor={`n-${item?.id ?? "new"}`}>Bezeichnung</label>
-        <input id={`n-${item?.id ?? "new"}`} name="name" className="input" defaultValue={item?.name} placeholder="z. B. Weihnachtsgeschenke" required />
+        <label className="label" htmlFor={`n-${item?.id ?? "new"}`}>{t("Bezeichnung")}</label>
+        <input id={`n-${item?.id ?? "new"}`} name="name" className="input" defaultValue={item?.name} placeholder={t("z. B. Weihnachtsgeschenke")} required />
       </div>
       <div className="sm:col-span-2 lg:col-span-2">
-        <p className="label">Art</p>
+        <p className="label">{t("Art")}</p>
         <div className="grid grid-cols-2 gap-1 rounded-xl border border-line-strong p-1" role="radiogroup">
           {(["PLANNED", "IRREGULAR"] as const).map((k) => (
             <button
@@ -224,32 +228,33 @@ function ItemForm({ item, onDone }: { item?: ReserveItemView; onDone?: () => voi
               onClick={() => setKind(k)}
               className={`min-h-9 rounded-lg px-2 text-sm font-bold transition ${kind === k ? "bg-accent text-accent-fg" : "text-muted hover:text-fg"}`}
             >
-              {k === "PLANNED" ? "Bekannte Wiederholung" : "Unregelmäßig"}
+              {k === "PLANNED" ? t("Bekannte Wiederholung") : t("Unregelmäßig")}
             </button>
           ))}
         </div>
       </div>
       <div>
-        <label className="label" htmlFor={`i-${item?.id ?? "new"}`}>{kind === "PLANNED" ? "Alle … Monate" : "Sinnvolles Intervall (Monate)"}</label>
+        <label className="label" htmlFor={`i-${item?.id ?? "new"}`}>{kind === "PLANNED" ? t("Alle … Monate") : t("Sinnvolles Intervall (Monate)")}</label>
         <input id={`i-${item?.id ?? "new"}`} name="interval" type="number" min={1} max={240} className="input" defaultValue={item?.plannedIntervalMonths ?? ""} placeholder={kind === "PLANNED" ? "z. B. 12" : "optional"} />
       </div>
       <div>
-        <label className="label" htmlFor={`a-${item?.id ?? "new"}`}>{kind === "PLANNED" ? "Geplanter Betrag (€)" : "Betrag pro Intervall (€)"}</label>
+        <label className="label" htmlFor={`a-${item?.id ?? "new"}`}>{kind === "PLANNED" ? t("Geplanter Betrag (€)") : t("Betrag pro Intervall (€)")}</label>
         <input id={`a-${item?.id ?? "new"}`} name="amount" className="input tabular" inputMode="decimal" defaultValue={item?.plannedAmountCents != null ? centsToInput(item.plannedAmountCents) : ""} placeholder={kind === "PLANNED" ? "z. B. 300" : "optional"} />
       </div>
       <p className="text-xs text-muted sm:col-span-2 lg:col-span-4">
         {kind === "PLANNED"
-          ? "Leer gelassen, nimmt Vierklee das Intervall aus deinen letzten zwei Käufen und den Betrag aus dem letzten Kauf."
-          : "Intervall und Betrag sind deine Schätzung. Mit genug dokumentierten Käufen kannst du auf den tatsächlichen Betrag umschalten."}
+          ? t("Leer gelassen, nimmt Vierklee das Intervall aus deinen letzten zwei Käufen und den Betrag aus dem letzten Kauf.")
+          : t("Intervall und Betrag sind deine Schätzung. Mit genug dokumentierten Käufen kannst du auf den tatsächlichen Betrag umschalten.")}
       </p>
       <SubmitButton className="btn">
-        <Plus size={16} /> {item ? "Speichern" : "Anlegen"}
+        <Plus size={16} /> {item ? t("Speichern") : t("Anlegen")}
       </SubmitButton>
     </ActionForm>
   );
 }
 
 function ItemCard({ item }: { item: ReserveItemView }) {
+  const t = useT();
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [open, setOpen] = useState(false);
@@ -266,25 +271,25 @@ function ItemCard({ item }: { item: ReserveItemView }) {
           <h3 className="truncate text-base font-black">{item.name}</h3>
           <p className="text-xs text-muted">
             {item.kind === "PLANNED"
-              ? `${fmtMonths(s.intervalMonths)}${item.plannedIntervalMonths == null && s.computedIntervalMonths ? " (aus deinen Käufen)" : ""}`
-              : `${item.purchases.length} dokumentierte Käufe${s.avgIntervalDays ? ` · Ø alle ${s.avgIntervalDays} Tage` : ""}`}
+              ? fmtMonths(s.intervalMonths, t) + (item.plannedIntervalMonths == null && s.computedIntervalMonths ? " " + t("(aus deinen Käufen)") : "")
+              : t("{n} dokumentierte Käufe", { n: item.purchases.length }) + (s.avgIntervalDays ? t(" · Ø alle {n} Tage", { n: s.avgIntervalDays }) : "")}
           </p>
         </div>
         <div className="flex shrink-0">
-          <button className="icon-btn" aria-label="Bearbeiten" onClick={() => setEditing((e) => !e)}><Pencil size={16} /></button>
-          <UndoDelete onDelete={() => deleteReserveItem(item.id)} onRestore={restoreReserveItem} message={`„${item.name}“ gelöscht`} label={`${item.name} löschen`} />
+          <button className="icon-btn" aria-label={t("Bearbeiten")} onClick={() => setEditing((e) => !e)}><Pencil size={16} /></button>
+          <UndoDelete onDelete={() => deleteReserveItem(item.id)} onRestore={restoreReserveItem} message={t("„{name}“ gelöscht", { name: item.name })} label={t("{name} löschen", { name: item.name })} />
         </div>
       </div>
 
       <div className="mt-3 flex items-end justify-between gap-3">
         <div>
           <p className="tabular text-2xl font-black"><AnimatedNumber cents={s.monthlyCents} /></p>
-          <p className="text-xs text-muted">pro Monat zurücklegen</p>
+          <p className="text-xs text-muted">{t("pro Monat zurücklegen")}</p>
         </div>
         {due && (
           <div className="text-right">
             <p className={`text-sm font-bold ${daysToDue != null && daysToDue <= 31 ? "text-warn" : ""}`}>{formatDate(due)}</p>
-            <p className="text-xs text-muted">{daysToDue != null && daysToDue < 0 ? "überfällig" : "nächste Fälligkeit"}</p>
+            <p className="text-xs text-muted">{daysToDue != null && daysToDue < 0 ? t("überfällig") : t("nächste Fälligkeit")}</p>
           </div>
         )}
       </div>
@@ -293,7 +298,7 @@ function ItemCard({ item }: { item: ReserveItemView }) {
         <div className="mt-3">
           <ProgressBar value={progress} color="var(--accent)" />
           <p className="mt-1 text-xs text-muted">
-            <span className="tabular">{formatCents(s.accruedCents)}</span> von <span className="tabular">{formatCents(s.targetCents)}</span> angespart
+            <span className="tabular">{formatCents(s.accruedCents)}</span>{" "}{t("von")}{" "}<span className="tabular">{formatCents(s.targetCents)}</span>{" "}{t("angespart")}
             {progress >= 1 && <CheckCircle2 size={13} className="ml-1 inline text-good" />}
           </p>
         </div>
@@ -307,8 +312,8 @@ function ItemCard({ item }: { item: ReserveItemView }) {
             aria-pressed={!item.useEffective}
             className={`rounded-xl border p-2 text-left transition ${!item.useEffective ? "border-accent bg-accent-soft" : "border-line"}`}
           >
-            <span className="block font-bold">Geschätzt</span>
-            <span className="tabular">{s.estimateMonthlyCents != null ? `${formatCents(s.estimateMonthlyCents)} / Monat` : "Intervall + Betrag fehlen"}</span>
+            <span className="block font-bold">{t("Geschätzt")}</span>
+            <span className="tabular">{s.estimateMonthlyCents != null ? t("{v0} / Monat", { v0: formatCents(s.estimateMonthlyCents) }) : t("Intervall + Betrag fehlen")}</span>
           </button>
           <button
             type="button"
@@ -317,8 +322,8 @@ function ItemCard({ item }: { item: ReserveItemView }) {
             aria-pressed={item.useEffective}
             className={`rounded-xl border p-2 text-left transition disabled:opacity-50 ${item.useEffective ? "border-accent bg-accent-soft" : "border-line"}`}
           >
-            <span className="block font-bold">Tatsächlich</span>
-            <span className="tabular">{s.effectiveMonthlyCents != null ? `${formatCents(s.effectiveMonthlyCents)} / Monat` : "mind. 2 Käufe nötig"}</span>
+            <span className="block font-bold">{t("Tatsächlich")}</span>
+            <span className="tabular">{s.effectiveMonthlyCents != null ? t("{v0} / Monat", { v0: formatCents(s.effectiveMonthlyCents) }) : t("mind. 2 Käufe nötig")}</span>
           </button>
         </div>
       )}
@@ -330,7 +335,7 @@ function ItemCard({ item }: { item: ReserveItemView }) {
       )}
 
       <button onClick={() => setOpen((o) => !o)} className="mt-3 flex w-full items-center justify-between rounded-xl px-1 py-1.5 text-sm font-bold text-muted hover:text-fg">
-        <span className="flex items-center gap-1.5"><Target size={15} /> Käufe dokumentieren ({item.purchases.length})</span>
+        <span className="flex items-center gap-1.5"><Target size={15} />{" "}{t("Käufe dokumentieren ({n})", { n: item.purchases.length })}</span>
         <ChevronDown size={16} className={`transition-transform duration-300 ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
@@ -345,8 +350,8 @@ function ItemCard({ item }: { item: ReserveItemView }) {
                   <UndoDelete
                     onDelete={() => deleteReservePurchase(p.id)}
                     onRestore={restoreReservePurchase}
-                    message="Kauf gelöscht"
-                    label="Kauf löschen"
+                    message={t("Kauf gelöscht")}
+                    label={t("Kauf löschen")}
                     className="icon-btn h-8 w-8 text-subtle hover:bg-bad/10 hover:text-bad"
                     iconSize={14}
                   />
@@ -356,9 +361,9 @@ function ItemCard({ item }: { item: ReserveItemView }) {
           )}
           <ActionForm action={addReservePurchase} className="grid grid-cols-2 gap-2 sm:grid-cols-[1fr_1fr_auto]">
             <input type="hidden" name="itemId" value={item.id} />
-            <input name="date" type="date" className="input" defaultValue={today()} aria-label="Datum des Kaufs" required />
-            <input name="amount" className="input tabular" inputMode="decimal" placeholder="Betrag €" aria-label="Betrag in Euro" required />
-            <SubmitButton className="btn col-span-2 sm:col-span-1"><Plus size={16} /> Kauf</SubmitButton>
+            <input name="date" type="date" className="input" defaultValue={today()} aria-label={t("Datum des Kaufs")} required />
+            <input name="amount" className="input tabular" inputMode="decimal" placeholder={t("Betrag €")} aria-label={t("Betrag in Euro")} required />
+            <SubmitButton className="btn col-span-2 sm:col-span-1"><Plus size={16} />{" "}{t("Kauf")}</SubmitButton>
           </ActionForm>
         </div>
       )}

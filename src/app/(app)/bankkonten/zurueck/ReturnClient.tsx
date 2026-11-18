@@ -7,12 +7,14 @@ import { Loader2, XCircle } from "lucide-react";
 import { finalizeBankConnection, syncBankConnection } from "@/actions/banking";
 import { LogoMark } from "@/components/brand/Logo";
 import { SuccessBurst } from "@/components/motion/SuccessBurst";
+import { useT } from "@/lib/i18n/client";
 
 /** Nach dem Web-Formular: Status abfragen (bis zu 2 Minuten), dann zurück zur Übersicht. */
 export function ReturnClient({ connectionId, afterSync }: { connectionId: string; afterSync: boolean }) {
+  const t = useT();
   const router = useRouter();
   const [state, setState] = useState<"working" | "done" | "failed">("working");
-  const [message, setMessage] = useState(afterSync ? "Hole neue Umsätze von deiner Bank …" : "Prüfe die Freigabe bei deiner Bank …");
+  const [message, setMessage] = useState(afterSync ? t("Hole neue Umsätze von deiner Bank …") : t("Prüfe die Freigabe bei deiner Bank …"));
   const started = useRef(false);
   const mounted = useRef(true);
 
@@ -40,7 +42,7 @@ export function ReturnClient({ connectionId, afterSync }: { connectionId: string
           return;
         }
         setState("done");
-        setMessage(res.message ?? "Synchronisiert.");
+        setMessage(res.message ?? t("Synchronisiert."));
         setTimeout(() => router.replace("/bankkonten"), 1500);
         return;
       }
@@ -49,13 +51,13 @@ export function ReturnClient({ connectionId, afterSync }: { connectionId: string
         if (!mounted.current) return;
         if (res.status === "completed") {
           setState("done");
-          setMessage("Verbunden! Ordne jetzt deine Konten zu.");
+          setMessage(t("Verbunden! Ordne jetzt deine Konten zu."));
           setTimeout(() => router.replace("/bankkonten?neu=1"), 1200);
           return;
         }
         if (res.status === "failed") {
           setState("failed");
-          setMessage(res.error ?? "Die Verbindung hat nicht geklappt.");
+          setMessage(res.error ?? t("Die Verbindung hat nicht geklappt."));
           return;
         }
         if (res.message) setMessage(res.message);
@@ -63,7 +65,7 @@ export function ReturnClient({ connectionId, afterSync }: { connectionId: string
       }
       if (mounted.current) {
         setState("failed");
-        setMessage("Die Bank hat nicht rechtzeitig geantwortet. Du kannst den Status später unter „Bankkonten“ prüfen.");
+        setMessage(t("Die Bank hat nicht rechtzeitig geantwortet. Du kannst den Status später unter „Bankkonten“ prüfen."));
       }
     })();
   }, [connectionId, afterSync, router]);
@@ -78,10 +80,10 @@ export function ReturnClient({ connectionId, afterSync }: { connectionId: string
       )}
       {state === "done" && <SuccessBurst size={64} />}
       {state === "failed" && <XCircle size={64} className="animate-shake text-bad" />}
-      <h1 className="mt-6 text-2xl font-black">{state === "working" ? "Einen Moment …" : state === "done" ? "Geschafft! 🍀" : "Das hat nicht geklappt"}</h1>
+      <h1 className="mt-6 text-2xl font-black">{state === "working" ? t("Einen Moment …") : state === "done" ? t("Geschafft! 🍀") : t("Das hat nicht geklappt")}</h1>
       <p className="mt-2 text-muted">{message}</p>
       {state !== "working" && (
-        <Link href="/bankkonten" className="btn mt-6">Zu den Bankkonten</Link>
+        <Link href="/bankkonten" className="btn mt-6">{t("Zu den Bankkonten")}</Link>
       )}
     </div>
   );

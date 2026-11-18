@@ -1,7 +1,9 @@
+import { getT } from "@/lib/i18n/server";
 /** Lade-Skelett: erscheint sofort beim Seitenwechsel, bis die Daten da sind. */
-export default function Loading() {
+export default async function Loading() {
+  const t = await getT();
   return (
-    <div className="space-y-5" aria-busy="true" aria-label="Seite lädt">
+    <div className="space-y-5" aria-busy="true" aria-label={t("Seite lädt")}>
       <div className="space-y-2">
         <div className="skeleton h-4 w-24" />
         <div className="skeleton h-8 w-64 max-w-full" />

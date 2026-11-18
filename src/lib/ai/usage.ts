@@ -2,6 +2,7 @@ import { prisma } from "../db";
 import { can } from "../access";
 import { aiAvailable, categorizeWithAi, estimateUsd, type AiItem } from "./categorize";
 import type { Category } from "../constants";
+import { msg } from "../i18n/translate";
 
 export const monthKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 
@@ -39,7 +40,7 @@ export async function runAiCategorization(
   if (!status.enabled || !status.available || items.length === 0) return { categories: new Map(), skippedByLimit: 0 };
   const allowed = items.slice(0, status.remaining);
   const skipped = items.length - allowed.length;
-  if (!allowed.length) return { categories: new Map(), skippedByLimit: skipped, error: "Dein monatliches KI-Limit ist erreicht." };
+  if (!allowed.length) return { categories: new Map(), skippedByLimit: skipped, error: msg("Dein monatliches KI-Limit ist erreicht.") };
 
   const r = await categorizeWithAi(allowed);
   if (r.requests > 0) {

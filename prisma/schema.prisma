@@ -152,6 +152,8 @@ model Settings {
   hideAmounts      Boolean @default(false)
   /// Animationen: system (wie Gerät) | on | off
   motion           String  @default("system")
+  /// Sprache: de | en | ru | tr | es. Leer = automatisch (Browser)
+  language         String?
   /// JSON: [{ id, size, visible }] in Anzeigereihenfolge
   dashboardLayout  String?
 

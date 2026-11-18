@@ -3,12 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 import { prefersReducedMotion } from "@/lib/motion";
+import { useT } from "@/lib/i18n/client";
 
 /**
  * Bottom-Sheet auf dem Handy, zentrierter Dialog ab Tablet-Breite.
  * Mit Ein- und Ausblend-Animation; auf dem Handy lässt es sich nach unten wegwischen.
  */
 export function Sheet({ open, onClose, title, children }: { open: boolean; onClose: () => void; title: string; children: React.ReactNode }) {
+  const t = useT();
   const panel = useRef<HTMLDivElement>(null);
   const [rendered, setRendered] = useState(open);
   const [leaving, setLeaving] = useState(false);
@@ -89,7 +91,7 @@ export function Sheet({ open, onClose, title, children }: { open: boolean; onClo
         </div>
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-black">{title}</h2>
-          <button onClick={onClose} className="icon-btn" aria-label="Schließen">
+          <button onClick={onClose} className="icon-btn" aria-label={t("Schließen")}>
             <X size={20} />
           </button>
         </div>

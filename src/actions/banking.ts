@@ -10,6 +10,8 @@ import { activeProviderInfo, appUrl, getProvider, maskIban, type ProviderId } fr
 import { planSync, syncSince } from "@/lib/banking/sync";
 import { runAiCategorization } from "@/lib/ai/usage";
 import { payeeKey } from "@/lib/csvImport";
+import { getT } from "@/lib/i18n/server";
+import { msg } from "@/lib/i18n/translate";
 
 type Result = { error?: string; redirectUrl?: string; message?: string; status?: string };
 
@@ -23,7 +25,7 @@ async function origin(): Promise<string> {
 
 async function ownConnection(userId: string, id: string) {
   const c = await prisma.bankConnection.findFirst({ where: { id, userId }, include: { accounts: true } });
-  if (!c) throw new Error("Verbindung nicht gefunden.");
+  if (!c) throw new Error(msg("Verbindung nicht gefunden."));
   return c;
 }
 
@@ -34,6 +36,7 @@ function friendly(e: unknown): string {
 
 /** Schritt 1: Verbindung anlegen und zum Web-Formular des Anbieters weiterleiten. */
 export async function startBankConnection(): Promise<Result> {
+  const t = await getT();
   const user = await requireFeature("bank.connect");
   const info = activeProviderInfo();
   if (info.problem) return { error: info.problem };
@@ -48,25 +51,27 @@ export async function startBankConnection(): Promise<Result> {
     return { redirectUrl };
   } catch (e) {
     await prisma.bankConnection.delete({ where: { id: conn.id } });
-    return { error: `Verbindung konnte nicht gestartet werden: ${friendly(e)}` };
+    return { error: t("Verbindung konnte nicht gestartet werden: {v0}", { v0: friendly(e) }) };
   }
 }
 
 /** Demo-Bank: Freigabe erteilen oder abbrechen. */
 export async function answerDemoBank(connectionId: string, approve: boolean): Promise<Result> {
+  const t = await getT();
   const user = await requireFeature("bank.connect");
   const c = await ownConnection(user.id, connectionId);
-  if (c.provider !== "demo") return { error: "Nur für die Demo-Bank." };
+  if (c.provider !== "demo") return { error: t("Nur für die Demo-Bank.") };
   await prisma.bankConnection.update({ where: { id: c.id }, data: { pendingFormId: `${approve ? "done" : "aborted"}:${c.id}` } });
   return {};
 }
 
 /** Schritt 2 (nach Rücksprung): Status prüfen, Konten übernehmen. Wird von der Rücksprung-Seite wiederholt aufgerufen. */
 export async function finalizeBankConnection(connectionId: string): Promise<Result> {
+  const t = await getT();
   const user = await requireFeature("bank.connect");
   const c = await ownConnection(user.id, connectionId);
   if (c.status === "ACTIVE") return { status: "completed" };
-  if (!c.pendingFormId) return { status: "failed", error: "Diese Verbindung wurde nicht richtig gestartet." };
+  if (!c.pendingFormId) return { status: "failed", error: t("Diese Verbindung wurde nicht richtig gestartet.") };
   const ctx = { userId: user.id, connectionId: c.id };
   try {
     const provider = getProvider(c.provider as ProviderId);
@@ -107,7 +112,7 @@ export async function finalizeBankConnection(connectionId: string): Promise<Resu
     revalidatePath("/bankkonten");
     return { status: "completed" };
   } catch (e) {
-    return { status: "pending", error: friendly(e) };
+    return { status: "pending", error: t(friendly(e)) };
   }
 }
 
@@ -115,15 +120,16 @@ const linkSchema = z.object({ linkId: z.string(), accountId: z.string().nullable
 
 /** Bankkonto einem Vierklee-Konto zuordnen. Pro Vierklee-Konto ist nur ein Bankkonto erlaubt. */
 export async function updateBankLink(input: z.input<typeof linkSchema>): Promise<Result> {
+  const t = await getT();
   const user = await requireFeature("bank.connect");
   const parsed = linkSchema.safeParse(input);
-  if (!parsed.success) return { error: "Ungültige Angaben." };
+  if (!parsed.success) return { error: t("Ungültige Angaben.") };
   const { linkId, accountId, syncBalance } = parsed.data;
   const link = await prisma.bankAccountLink.findFirst({ where: { id: linkId, connection: { userId: user.id } } });
-  if (!link) return { error: "Konto nicht gefunden." };
+  if (!link) return { error: t("Konto nicht gefunden.") };
   if (accountId) {
     const acc = await prisma.account.findFirst({ where: { id: accountId, userId: user.id } });
-    if (!acc) return { error: "Vierklee-Konto nicht gefunden." };
+    if (!acc) return { error: t("Vierklee-Konto nicht gefunden.") };
   }
   await prisma.$transaction([
     ...(accountId
@@ -140,9 +146,10 @@ export async function updateBankLink(input: z.input<typeof linkSchema>): Promise
  * dann Kontostände und neue Umsätze übernehmen.
  */
 export async function syncBankConnection(connectionId: string): Promise<Result & { imported?: number }> {
+  const t = await getT();
   const user = await requireFeature("bank.connect");
   const c = await ownConnection(user.id, connectionId);
-  if (!c.externalId) return { error: "Die Verbindung ist noch nicht fertig eingerichtet." };
+  if (!c.externalId) return { error: t("Die Verbindung ist noch nicht fertig eingerichtet.") };
   const ctx = { userId: user.id, connectionId: c.id };
   const returnUrl = `${await origin()}/bankkonten/zurueck?c=${c.id}&sync=1`;
   try {
@@ -157,11 +164,11 @@ export async function syncBankConnection(connectionId: string): Promise<Result &
     }
     if (state.status === "webform") {
       await prisma.bankConnection.update({ where: { id: c.id }, data: { status: "NEEDS_REAUTH", pendingTaskId: taskId } });
-      return { redirectUrl: state.redirectUrl, message: "Deine Bank möchte die Freigabe erneut bestätigen." };
+      return { redirectUrl: state.redirectUrl, message: t("Deine Bank möchte die Freigabe erneut bestätigen.") };
     }
     if (state.status === "failed") {
       await prisma.bankConnection.update({ where: { id: c.id }, data: { status: "ERROR", lastError: state.message, pendingTaskId: null } });
-      return { error: state.message };
+      return { error: t(state.message) };
     }
     // Bei "pending" nach Ablauf trotzdem weitermachen: es werden die bis jetzt vorhandenen Daten übernommen.
 
@@ -228,17 +235,20 @@ export async function syncBankConnection(connectionId: string): Promise<Result &
       imported: plan.length,
       message:
         mapped.length === 0
-          ? "Ordne zuerst mindestens ein Bankkonto einem Vierklee-Konto zu."
-          : `${plan.length} neue Umsätze übernommen.${ai.categories.size ? ` ✨ ${ai.categories.size} davon hat Claude eingeordnet.` : ""}${ai.error ? ` (KI: ${ai.error})` : ""}`,
+          ? t("Ordne zuerst mindestens ein Bankkonto einem Vierklee-Konto zu.")
+          : t("{n} neue Umsätze übernommen.", { n: plan.length }) +
+            (ai.categories.size ? " ✨ " + t("{n} davon hat Claude eingeordnet.", { n: ai.categories.size }) : "") +
+            (ai.error ? ` (${t("KI")}: ${t(ai.error)})` : ""),
     };
   } catch (e) {
     await prisma.bankConnection.update({ where: { id: c.id }, data: { lastError: friendly(e) } });
-    return { error: friendly(e) };
+    return { error: t(friendly(e)) };
   }
 }
 
 /** Verbindung trennen. Bereits übernommene Umsätze bleiben erhalten. */
 export async function disconnectBank(connectionId: string): Promise<Result> {
+  const t = await getT();
   const user = await requireFeature("bank.connect");
   const c = await ownConnection(user.id, connectionId);
   let warning: string | undefined;
@@ -246,10 +256,10 @@ export async function disconnectBank(connectionId: string): Promise<Result> {
     try {
       await getProvider(c.provider as ProviderId).deleteConnection({ userId: user.id, connectionId: c.id }, c.externalId);
     } catch (e) {
-      warning = `Beim Anbieter konnte die Verbindung nicht gelöscht werden (${friendly(e)}). Lokal ist sie entfernt.`;
+      warning = t("Beim Anbieter konnte die Verbindung nicht gelöscht werden ({reason}). Lokal ist sie entfernt.", { reason: t(friendly(e)) });
     }
   }
   await prisma.bankConnection.delete({ where: { id: c.id } });
   revalidatePath("/bankkonten");
-  return { message: warning ?? "Verbindung getrennt." };
+  return { message: warning ?? t("Verbindung getrennt.") };
 }

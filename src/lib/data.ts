@@ -1,5 +1,6 @@
 import { prisma } from "./db";
-import { ACCOUNT_KINDS, ACCOUNT_META, type AccountKind } from "./constants";
+import { ACCOUNT_KINDS, ACCOUNT_META, displayAccountName, type AccountKind } from "./constants";
+import { getT } from "./i18n/server";
 import { allocate, summarize, type Balances, type PaymentLike, type SettingsLike } from "./finance";
 
 /** Legt die vier Konten und Einstellungen an, falls sie fehlen. */
@@ -16,6 +17,7 @@ export async function ensureUserSetup(userId: string) {
 
 /** Lädt alles, was für Übersicht und Berechnungen gebraucht wird. */
 export async function loadOverview(userId: string) {
+  const t = await getT();
   await ensureUserSetup(userId);
   const [accounts, payments, settings] = await Promise.all([
     prisma.account.findMany({ where: { userId } }),
@@ -24,7 +26,7 @@ export async function loadOverview(userId: string) {
   ]);
   const sortedAccounts = [...accounts]
     .sort((a, b) => ACCOUNT_KINDS.indexOf(a.kind as AccountKind) - ACCOUNT_KINDS.indexOf(b.kind as AccountKind))
-    .map((a) => ({ ...a, color: a.color ?? ACCOUNT_META[a.kind as AccountKind].color }));
+    .map((a) => ({ ...a, name: displayAccountName(a.name, a.kind as AccountKind, t), color: a.color ?? ACCOUNT_META[a.kind as AccountKind].color }));
   const colors = Object.fromEntries(sortedAccounts.map((a) => [a.kind, a.color])) as Record<AccountKind, string>;
   const names = Object.fromEntries(sortedAccounts.map((a) => [a.kind, a.name])) as Record<AccountKind, string>;
   const balances = Object.fromEntries(ACCOUNT_KINDS.map((k) => [k, 0])) as Balances;
@@ -39,10 +41,11 @@ export async function loadOverview(userId: string) {
 
 /** Konten für Navigation und Schnellbuchung. */
 export async function loadAccountsLite(userId: string) {
+  const t = await getT();
   await ensureUserSetup(userId);
   const accounts = await prisma.account.findMany({ where: { userId }, select: { id: true, kind: true, name: true, color: true } });
   return accounts
     .sort((a, b) => ACCOUNT_KINDS.indexOf(a.kind as AccountKind) - ACCOUNT_KINDS.indexOf(b.kind as AccountKind))
-    .map((a) => ({ ...a, color: a.color ?? ACCOUNT_META[a.kind as AccountKind].color }));
+    .map((a) => ({ ...a, name: displayAccountName(a.name, a.kind as AccountKind, t), color: a.color ?? ACCOUNT_META[a.kind as AccountKind].color }));
 }
 export type AccountLite = Awaited<ReturnType<typeof loadAccountsLite>>[number];

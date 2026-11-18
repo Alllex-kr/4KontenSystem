@@ -4,6 +4,7 @@
 // genügt dann die Prüfung von iss, aud, exp und nonce, die Signatur muss nicht geprüft werden.
 
 import { createHash, randomBytes } from "node:crypto";
+import { msg } from "../i18n/translate";
 
 const AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 const TOKEN_URL = "https://oauth2.googleapis.com/token";
@@ -77,19 +78,19 @@ type IdTokenClaims = {
 /** Liest die Nutzlast eines JWT (ohne Signaturprüfung, siehe Kommentar oben). */
 export function decodeJwtPayload(jwt: string): IdTokenClaims {
   const parts = jwt.split(".");
-  if (parts.length !== 3) throw new Error("Ungültiges ID-Token.");
+  if (parts.length !== 3) throw new Error(msg("Ungültiges ID-Token."));
   return JSON.parse(Buffer.from(parts[1], "base64url").toString("utf8")) as IdTokenClaims;
 }
 
 /** Prüft die Angaben im ID-Token und macht daraus ein Profil. */
 export function profileFromIdToken(claims: IdTokenClaims, expected: { clientId: string; nonce: string; now?: number }): GoogleProfile {
   const now = Math.floor((expected.now ?? Date.now()) / 1000);
-  if (!claims.iss || !ISSUERS.includes(claims.iss)) throw new Error("ID-Token stammt nicht von Google.");
+  if (!claims.iss || !ISSUERS.includes(claims.iss)) throw new Error(msg("ID-Token stammt nicht von Google."));
   const aud = Array.isArray(claims.aud) ? claims.aud : [claims.aud];
-  if (!aud.includes(expected.clientId)) throw new Error("ID-Token ist nicht für Vierklee ausgestellt.");
-  if (!claims.exp || claims.exp < now - 60) throw new Error("ID-Token ist abgelaufen.");
-  if (!claims.nonce || claims.nonce !== expected.nonce) throw new Error("Anmeldung passt nicht zur Anfrage (nonce).");
-  if (!claims.sub || !claims.email) throw new Error("Google hat keine E-Mail-Adresse übermittelt.");
+  if (!aud.includes(expected.clientId)) throw new Error(msg("ID-Token ist nicht für Vierklee ausgestellt."));
+  if (!claims.exp || claims.exp < now - 60) throw new Error(msg("ID-Token ist abgelaufen."));
+  if (!claims.nonce || claims.nonce !== expected.nonce) throw new Error(msg("Anmeldung passt nicht zur Anfrage (nonce)."));
+  if (!claims.sub || !claims.email) throw new Error(msg("Google hat keine E-Mail-Adresse übermittelt."));
   return {
     sub: claims.sub,
     email: claims.email.trim().toLowerCase(),

@@ -10,6 +10,7 @@ import { UndoDelete } from "@/components/UndoDelete";
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
 import { Card, PageHeader, ProgressBar } from "@/components/ui";
 import { RadialProgress } from "@/components/charts";
+import { getT } from "@/lib/i18n/server";
 
 const COLORS = ["#10b981", "#3b82f6", "#a855f7", "#f59e0b", "#ec4899", "#06b6d4"];
 
@@ -17,9 +18,13 @@ function monthsBetween(a: Date, b: Date) {
   return Math.max(0, (b.getFullYear() - a.getFullYear()) * 12 + (b.getMonth() - a.getMonth()));
 }
 
-export const metadata = { title: "Sparziele" };
+export async function generateMetadata() {
+  const t = await getT();
+  return { title: t("Sparziele") };
+}
 
 export default async function ZielePage() {
+  const t = await getT();
   const user = await requireUser();
   const access = await getAccess(user.id);
   if (!access.permissions.has("goals.use")) return <FeatureLocked feature="goals.use" planName={access.plan?.name} />;
@@ -34,35 +39,35 @@ export default async function ZielePage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Sparziele"
-        subtitle={`Deine Ziele werden vom Sparkonto bedient. Aktuell sparst du ${formatCents(allocation.sparenCents)} pro Monat, auf dem Sparkonto liegen ${formatCents(balances.SPAREN)}.`}
+        title={t("Sparziele")}
+        subtitle={t("Deine Ziele werden vom Sparkonto bedient. Aktuell sparst du {v0} pro Monat, auf dem Sparkonto liegen {v1}.", { v0: formatCents(allocation.sparenCents), v1: formatCents(balances.SPAREN) })}
       />
 
       <div className="grid gap-6 xl:grid-cols-3">
-        <Card title="Neues Sparziel" className="xl:col-span-1">
+        <Card title={t("Neues Sparziel")} className="xl:col-span-1">
           <ActionForm action={addGoal} className="space-y-3">
             <div>
-              <label className="label" htmlFor="name">Wofür sparst du?</label>
-              <input id="name" name="name" className="input" placeholder="z. B. Auslandssemester, Laptop" required />
+              <label className="label" htmlFor="name">{t("Wofür sparst du?")}</label>
+              <input id="name" name="name" className="input" placeholder={t("z. B. Auslandssemester, Laptop")} required />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="label" htmlFor="target">Zielbetrag (€)</label>
+                <label className="label" htmlFor="target">{t("Zielbetrag (€)")}</label>
                 <input id="target" name="target" className="input tabular" inputMode="decimal" placeholder="1000" required />
               </div>
               <div>
-                <label className="label" htmlFor="saved">Schon gespart (€)</label>
+                <label className="label" htmlFor="saved">{t("Schon gespart (€)")}</label>
                 <input id="saved" name="saved" className="input tabular" inputMode="decimal" placeholder="0" />
               </div>
             </div>
             <div>
-              <label className="label" htmlFor="deadline">Bis wann? (optional)</label>
+              <label className="label" htmlFor="deadline">{t("Bis wann? (optional)")}</label>
               <input id="deadline" name="deadline" type="date" className="input" />
             </div>
-            <SubmitButton>Ziel anlegen</SubmitButton>
+            <SubmitButton>{t("Ziel anlegen")}</SubmitButton>
           </ActionForm>
         </Card>
-        <Card title="Fortschritt aller Ziele" subtitle={`${formatCents(totalSaved)} von ${formatCents(totalTarget)} gespart`} className="xl:col-span-2">
+        <Card title={t("Fortschritt aller Ziele")} subtitle={t("{v0} von {v1} gespart", { v0: formatCents(totalSaved), v1: formatCents(totalTarget) })} className="xl:col-span-2">
           <RadialProgress
             data={goals.map((g, i) => ({ name: g.name, value: Math.min(100, (g.savedCents / g.targetCents) * 100), fill: COLORS[i % COLORS.length] }))}
           />
@@ -80,23 +85,23 @@ export default async function ZielePage() {
             <section key={g.id} className="card card-interactive">
               <div className="flex items-start justify-between gap-2">
                 <h2 className="font-bold">{g.name}</h2>
-                <UndoDelete onDelete={deleteGoalUndoable.bind(null, g.id)} onRestore={restoreGoal} message={`Sparziel „${g.name}“ gelöscht`} label="Ziel löschen" />
+                <UndoDelete onDelete={deleteGoalUndoable.bind(null, g.id)} onRestore={restoreGoal} message={t("Sparziel „{name}“ gelöscht", { name: g.name })} label={t("Ziel löschen")} />
               </div>
               <p className="tabular mt-2 text-2xl font-bold">
                 {formatCents(g.savedCents)} <span className="text-sm font-normal text-muted">/ {formatCents(g.targetCents)}</span>
               </p>
               <div className="mt-3"><ProgressBar value={progress} color={COLORS[i % COLORS.length]} /></div>
               <ul className="mt-3 space-y-1 text-xs text-muted">
-                <li>{progress >= 1 ? "🎉 Ziel erreicht!" : `Es fehlen noch ${formatCents(missing)}`}</li>
-                {g.deadline && <li>Ziel bis {formatDate(g.deadline)}{perMonth ? ` → ${formatCents(perMonth)} pro Monat nötig` : ""}</li>}
-                {progress < 1 && eta && <li>Mit deiner ganzen Sparrate in ca. {eta} Monat{eta === 1 ? "" : "en"} erreicht</li>}
+                <li>{progress >= 1 ? t("🎉 Ziel erreicht!") : t("Es fehlen noch {v0}", { v0: formatCents(missing) })}</li>
+                {g.deadline && <li>{t("Ziel bis {date}", { date: formatDate(g.deadline) })}{perMonth ? t(" → {v0} pro Monat nötig", { v0: formatCents(perMonth) }) : ""}</li>}
+                {progress < 1 && eta && <li>{eta === 1 ? t("Mit deiner ganzen Sparrate in ca. 1 Monat erreicht") : t("Mit deiner ganzen Sparrate in ca. {n} Monaten erreicht", { n: eta })}</li>}
               </ul>
               {progress < 1 && (
                 <ActionForm action={depositGoal} className="mt-4">
                   <input type="hidden" name="id" value={g.id} />
                   <div className="flex gap-2">
-                    <input name="amount" className="input tabular" inputMode="decimal" placeholder="Betrag einzahlen" required />
-                    <SubmitButton className="btn-ghost shrink-0">+ Einzahlen</SubmitButton>
+                    <input name="amount" className="input tabular" inputMode="decimal" placeholder={t("Betrag einzahlen")} required />
+                    <SubmitButton className="btn-ghost shrink-0">{t("+ Einzahlen")}</SubmitButton>
                   </div>
                 </ActionForm>
               )}

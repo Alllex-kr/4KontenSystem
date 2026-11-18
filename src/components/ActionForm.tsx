@@ -4,6 +4,7 @@ import { useActionState, useEffect, useRef } from "react";
 import { useFormStatus } from "react-dom";
 import type { ActionState } from "@/actions/types";
 import { useChangeKey } from "@/lib/motion";
+import { useT } from "@/lib/i18n/client";
 
 type Action = (prev: ActionState, formData: FormData) => Promise<ActionState>;
 
@@ -36,10 +37,11 @@ export function ActionForm({
 }
 
 export function SubmitButton({ children, className = "btn" }: { children: React.ReactNode; className?: string }) {
+  const t = useT();
   const { pending } = useFormStatus();
   return (
     <button type="submit" className={className} disabled={pending}>
-      {pending ? "Speichern …" : children}
+      {pending ? t("Speichern …") : children}
     </button>
   );
 }

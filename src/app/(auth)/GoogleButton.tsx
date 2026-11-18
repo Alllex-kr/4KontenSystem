@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useT } from "@/lib/i18n/client";
 
 /** "Mit Google fortfahren": normaler Seitenwechsel (kein Prefetch), damit die Weiterleitung zu Google sauber startet. */
-export function GoogleButton({ label = "Mit Google fortfahren" }: { label?: string }) {
+export function GoogleButton({ label }: { label?: string }) {
+  const t = useT();
   const [busy, setBusy] = useState(false);
   return (
     <a
@@ -13,7 +15,7 @@ export function GoogleButton({ label = "Mit Google fortfahren" }: { label?: stri
       className="btn-ghost w-full gap-3 py-3 text-base font-bold aria-busy:pointer-events-none aria-busy:opacity-70"
     >
       <GoogleLogo />
-      {busy ? "Weiter zu Google …" : label}
+      {busy ? t("Weiter zu Google …") : (label ?? t("Mit Google fortfahren"))}
     </a>
   );
 }

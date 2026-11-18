@@ -13,7 +13,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     permissionKeys(user.id),
   ]);
   return (
-    <AppShell userName={user.name} permissions={permissions} accounts={accounts} appearance={normalizeAppearance(settings)}>
+    <AppShell userName={user.name} permissions={permissions} language={settings?.language ?? null} accounts={accounts} appearance={normalizeAppearance(settings)}>
       {children}
     </AppShell>
   );

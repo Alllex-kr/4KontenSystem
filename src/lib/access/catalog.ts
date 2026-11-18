@@ -1,3 +1,5 @@
+import { msg } from "../i18n/translate";
+
 // Katalog aller Berechtigungen (ähnlich Salesforce):
 //
 //   Berechtigung  →  Berechtigungssatz  →  Satzgruppe  →  Abo / Personengruppe / Person
@@ -15,49 +17,49 @@ export type PermissionDef = { label: string; description: string; category: stri
 
 export const PERMISSIONS = {
   "import.csv": {
-    label: "CSV-Import",
-    description: "Umsätze aus dem CSV-Export der Bank importieren, mit gelernten Zuordnungen.",
-    category: "Daten",
+    label: msg("CSV-Import"),
+    description: msg("Umsätze aus dem CSV-Export der Bank importieren, mit gelernten Zuordnungen."),
+    category: msg("Daten"),
   },
   "bank.connect": {
-    label: "Bankanbindung",
-    description: "Bankkonten verbinden und Umsätze automatisch abrufen.",
-    category: "Daten",
+    label: msg("Bankanbindung"),
+    description: msg("Bankkonten verbinden und Umsätze automatisch abrufen."),
+    category: msg("Daten"),
   },
   "reserves.use": {
-    label: "Rücklagen",
-    description: "Rücklagen-Posten planen, Käufe dokumentieren und die Monatsrate berechnen.",
-    category: "Planung",
+    label: msg("Rücklagen"),
+    description: msg("Rücklagen-Posten planen, Käufe dokumentieren und die Monatsrate berechnen."),
+    category: msg("Planung"),
   },
   "goals.use": {
-    label: "Sparziele",
-    description: "Sparziele anlegen und den Fortschritt verfolgen (auch als Dashboard-Widget).",
-    category: "Planung",
+    label: msg("Sparziele"),
+    description: msg("Sparziele anlegen und den Fortschritt verfolgen (auch als Dashboard-Widget)."),
+    category: msg("Planung"),
   },
   "customize.use": {
-    label: "Dashboard & Design anpassen",
-    description: "Dashboard-Widgets anordnen, Vorlagen, Akzentfarbe und Kontofarben ändern.",
-    category: "Personalisierung",
+    label: msg("Dashboard & Design anpassen"),
+    description: msg("Dashboard-Widgets anordnen, Vorlagen, Akzentfarbe und Kontofarben ändern."),
+    category: msg("Personalisierung"),
   },
   "ai.categorize": {
-    label: "KI-Kategorisierung",
-    description: "Claude ordnet beim CSV-Import und Bank-Sync Umsätze ohne Regel ein.",
-    category: "KI",
+    label: msg("KI-Kategorisierung"),
+    description: msg("Claude ordnet beim CSV-Import und Bank-Sync Umsätze ohne Regel ein."),
+    category: msg("KI"),
   },
   "admin.access": {
-    label: "Adminbereich öffnen",
-    description: "Sieht den Adminbereich mit allen Nutzern, Abos und dem Protokoll.",
-    category: "Administration",
+    label: msg("Adminbereich öffnen"),
+    description: msg("Sieht den Adminbereich mit allen Nutzern, Abos und dem Protokoll."),
+    category: msg("Administration"),
   },
   "admin.users": {
-    label: "Nutzer verwalten",
-    description: "Ändert Abo, Gruppen und Berechtigungen von Nutzern, meldet sie ab oder sperrt sie.",
-    category: "Administration",
+    label: msg("Nutzer verwalten"),
+    description: msg("Ändert Abo, Gruppen und Berechtigungen von Nutzern, meldet sie ab oder sperrt sie."),
+    category: msg("Administration"),
   },
   "admin.access_control": {
-    label: "Berechtigungen verwalten",
-    description: "Legt Berechtigungssätze, Satzgruppen, Abos und Personengruppen an und ändert sie.",
-    category: "Administration",
+    label: msg("Berechtigungen verwalten"),
+    description: msg("Legt Berechtigungssätze, Satzgruppen, Abos und Personengruppen an und ändert sie."),
+    category: msg("Administration"),
   },
 } as const satisfies Record<string, PermissionDef>;
 

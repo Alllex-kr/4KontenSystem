@@ -1,14 +1,16 @@
+import { msg } from "./i18n/translate";
+
 export const THEMES = ["system", "light", "dark"] as const;
 export type Theme = (typeof THEMES)[number];
 
 export const ACCENTS = {
-  klee: { label: "Klee (Standard)", color: "#15803d" },
-  indigo: { label: "Indigo", color: "#4f46e5" },
-  violet: { label: "Violett", color: "#7c3aed" },
-  emerald: { label: "Smaragd", color: "#059669" },
-  sky: { label: "Himmelblau", color: "#0284c7" },
-  rose: { label: "Rosé", color: "#e11d48" },
-  amber: { label: "Bernstein", color: "#d97706" },
+  klee: { label: msg("Klee (Standard)"), color: "#15803d" },
+  indigo: { label: msg("Indigo"), color: "#4f46e5" },
+  violet: { label: msg("Violett"), color: "#7c3aed" },
+  emerald: { label: msg("Smaragd"), color: "#059669" },
+  sky: { label: msg("Himmelblau"), color: "#0284c7" },
+  rose: { label: msg("Rosé"), color: "#e11d48" },
+  amber: { label: msg("Bernstein"), color: "#d97706" },
 } as const;
 export type Accent = keyof typeof ACCENTS;
 

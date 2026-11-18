@@ -11,22 +11,26 @@ import type { AccountLite } from "@/lib/data";
 import { Card } from "@/components/ui";
 import { centerOf, deviceReducesMotion, softColorTransition, themeTransition } from "@/lib/motion";
 import { LogoMark } from "@/components/brand/Logo";
+import { useT } from "@/lib/i18n/client";
+import { msg } from "@/lib/i18n/translate";
+import { rich } from "@/lib/i18n/rich";
 
 const THEME_OPTIONS: { v: Theme; label: string; icon: typeof Sun; preview: [string, string, string] }[] = [
-  { v: "system", label: "Wie System", icon: Monitor, preview: ["#f6f8f5", "#0c1310", "#cbd3c8"] },
-  { v: "light", label: "Hell", icon: Sun, preview: ["#f6f8f5", "#ffffff", "#e3e8e1"] },
-  { v: "dark", label: "Dunkel", icon: Moon, preview: ["#0c1310", "#131c18", "#24322b"] },
+  { v: "system", label: msg("Wie System"), icon: Monitor, preview: ["#f6f8f5", "#0c1310", "#cbd3c8"] },
+  { v: "light", label: msg("Hell"), icon: Sun, preview: ["#f6f8f5", "#ffffff", "#e3e8e1"] },
+  { v: "dark", label: msg("Dunkel"), icon: Moon, preview: ["#0c1310", "#131c18", "#24322b"] },
 ];
 
 export function AnpassenClient({ appearance, accounts }: { appearance: Appearance; accounts: AccountLite[] }) {
+  const t = useT();
   const [a, setA] = useState(appearance);
   const [deviceReduced, setDeviceReduced] = useState(false);
   useEffect(() => setDeviceReduced(deviceReducesMotion()), []);
   const [saved, setSaved] = useState<string | null>(null);
   const [, start] = useTransition();
 
-  const flash = (msg = "Gespeichert ✓") => {
-    setSaved(msg);
+  const flash = (text = t("Gespeichert ✓")) => {
+    setSaved(text);
     setTimeout(() => setSaved(null), 1500);
   };
 
@@ -44,7 +48,7 @@ export function AnpassenClient({ appearance, accounts }: { appearance: Appearanc
 
   return (
     <div className="stagger space-y-6">
-      <Card title="Farbschema" subtitle="Hell, dunkel oder automatisch wie dein Gerät">
+      <Card title={t("Farbschema")} subtitle={t("Hell, dunkel oder automatisch wie dein Gerät")}>
         <div className="grid grid-cols-3 gap-3">
           {THEME_OPTIONS.map(({ v, label, icon: Icon, preview }) => (
             <button
@@ -58,22 +62,22 @@ export function AnpassenClient({ appearance, accounts }: { appearance: Appearanc
                 <div className="absolute bottom-2 left-2 right-2 h-6 rounded-lg sm:h-8" style={{ background: v === "system" ? preview[2] : preview[1], border: `1px solid ${preview[2]}` }} />
               </div>
               <p className="mt-2 flex items-center gap-1.5 text-sm font-bold">
-                <Icon size={15} /> {label}
+                <Icon size={15} /> {t(label)}
               </p>
             </button>
           ))}
         </div>
       </Card>
 
-      <Card title="Akzentfarbe" subtitle="Für Buttons, Links und Hervorhebungen">
+      <Card title={t("Akzentfarbe")} subtitle={t("Für Buttons, Links und Hervorhebungen")}>
         <div className="flex flex-wrap gap-3">
           {(Object.keys(ACCENTS) as Accent[]).map((k) => (
             <button
               key={k}
               onClick={() => set("accent", k)}
               aria-pressed={a.accent === k}
-              aria-label={ACCENTS[k].label}
-              title={ACCENTS[k].label}
+              aria-label={t(ACCENTS[k].label)}
+              title={t(ACCENTS[k].label)}
               className="group flex flex-col items-center gap-1.5"
             >
               <span
@@ -82,14 +86,14 @@ export function AnpassenClient({ appearance, accounts }: { appearance: Appearanc
               >
                 {a.accent === k && <Check size={22} strokeWidth={3} className="animate-pop" />}
               </span>
-              <span className="text-xs font-semibold text-muted">{ACCENTS[k].label.replace(" (Standard)", "")}</span>
+              <span className="text-xs font-semibold text-muted">{t(ACCENTS[k].label).replace(/\s*\(.*\)$/, "")}</span>
             </button>
           ))}
         </div>
       </Card>
 
       <div className="grid gap-6 md:grid-cols-2">
-        <Card title="Schriftgröße" subtitle="Größere Schrift für bessere Lesbarkeit">
+        <Card title={t("Schriftgröße")} subtitle={t("Größere Schrift für bessere Lesbarkeit")}>
           <div className="grid grid-cols-2 gap-2">
             {(["normal", "large"] as FontScale[]).map((f) => (
               <button
@@ -98,13 +102,13 @@ export function AnpassenClient({ appearance, accounts }: { appearance: Appearanc
                 aria-pressed={a.fontScale === f}
                 className={`flex min-h-14 items-center justify-center gap-2 rounded-xl border-2 font-bold transition ${a.fontScale === f ? "border-accent bg-accent-soft text-accent" : "border-line"}`}
               >
-                <Type size={f === "large" ? 22 : 16} /> {f === "normal" ? "Normal" : "Groß"}
+                <Type size={f === "large" ? 22 : 16} /> {f === "normal" ? t("Normal") : t("Groß")}
               </button>
             ))}
           </div>
         </Card>
 
-        <Card title="Privatsphäre" subtitle="Beträge unscharf machen, z. B. in der Bahn oder Vorlesung">
+        <Card title={t("Privatsphäre")} subtitle={t("Beträge unscharf machen, z. B. in der Bahn oder Vorlesung")}>
           <button
             onClick={() => set("hideAmounts", !a.hideAmounts)}
             role="switch"
@@ -114,24 +118,24 @@ export function AnpassenClient({ appearance, accounts }: { appearance: Appearanc
             <span className="flex items-center gap-3">
               {a.hideAmounts ? <EyeOff size={20} className="text-accent" /> : <Eye size={20} className="text-muted" />}
               <span>
-                <span className="block text-sm font-bold">Beträge verbergen</span>
-                <span className="tabular block text-xs text-muted">Vorschau: 1.234,56 €</span>
+                <span className="block text-sm font-bold">{t("Beträge verbergen")}</span>
+                <span className="tabular block text-xs text-muted">{t("Vorschau: 1.234,56 €")}</span>
               </span>
             </span>
             <span className={`relative h-7 w-12 shrink-0 rounded-full transition ${a.hideAmounts ? "bg-accent" : "bg-line-strong"}`}>
               <span className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-all duration-300 ease-[var(--ease-spring)] ${a.hideAmounts ? "left-6" : "left-1"}`} />
             </span>
           </button>
-          <p className="mt-2 text-xs text-muted">Auch über das Auge-Symbol oben erreichbar.</p>
+          <p className="mt-2 text-xs text-muted">{t("Auch über das Auge-Symbol oben erreichbar.")}</p>
         </Card>
       </div>
 
-      <Card title="Animationen" subtitle="Weiche Übergänge, hochzählende Beträge und kleine Effekte">
+      <Card title={t("Animationen")} subtitle={t("Weiche Übergänge, hochzählende Beträge und kleine Effekte")}>
         <div className="grid grid-cols-3 gap-2">
           {([
-            { v: "system", label: "Automatisch", icon: Monitor },
-            { v: "on", label: "Immer an", icon: Sparkles },
-            { v: "off", label: "Aus", icon: ZapOff },
+            { v: "system", label: msg("Automatisch"), icon: Monitor },
+            { v: "on", label: msg("Immer an"), icon: Sparkles },
+            { v: "off", label: msg("Aus"), icon: ZapOff },
           ] as { v: Motion; label: string; icon: typeof Sun }[]).map(({ v, label, icon: Icon }) => (
             <button
               key={v}
@@ -139,19 +143,19 @@ export function AnpassenClient({ appearance, accounts }: { appearance: Appearanc
               aria-pressed={a.motion === v}
               className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl border-2 text-sm font-bold transition duration-300 active:scale-[0.97] ${a.motion === v ? "border-accent bg-accent-soft text-accent" : "border-line"}`}
             >
-              <Icon size={18} /> {label}
+              <Icon size={18} /> {t(label)}
             </button>
           ))}
         </div>
         <p className="mt-2 text-xs text-muted">
-          „Automatisch“ folgt der Einstellung „Bewegung reduzieren“ deines Geräts.
+          {t("„Automatisch“ folgt der Einstellung „Bewegung reduzieren“ deines Geräts.")}
           {deviceReduced
-            ? " Dein Gerät hat sie eingeschaltet: Bei „Automatisch“ blendet Vierklee deshalb nur weich über, ohne Bewegung. Wähle „Immer an“ für alle Effekte (Gleiten, Hochzählen, Kleeblatt-Drehung)."
-            : " Dein Gerät erlaubt Animationen, alle Effekte sind aktiv."}
+            ? t(" Dein Gerät hat sie eingeschaltet: Bei „Automatisch“ blendet Vierklee deshalb nur weich über, ohne Bewegung. Wähle „Immer an“ für alle Effekte (Gleiten, Hochzählen, Kleeblatt-Drehung).")
+            : t(" Dein Gerät erlaubt Animationen, alle Effekte sind aktiv.")}
         </p>
       </Card>
 
-      <Card title="Deine Konten" subtitle="Gib deinen Konten eigene Namen und Farben, z. B. „Urlaubskasse“ statt „Freizeitkonto“">
+      <Card title={t("Deine Konten")} subtitle={t("Gib deinen Konten eigene Namen und Farben, z. B. „Urlaubskasse“ statt „Freizeitkonto“")}>
         <ul className="space-y-4">
           {accounts.map((acc) => (
             <AccountEditor key={acc.id} account={acc} onSaved={() => flash()} />
@@ -159,31 +163,35 @@ export function AnpassenClient({ appearance, accounts }: { appearance: Appearanc
         </ul>
       </Card>
 
-      <Card title="Dashboard" subtitle="Wähle eine Vorlage oder gestalte alles frei auf dem Dashboard">
+      <Card title={t("Dashboard")} subtitle={t("Wähle eine Vorlage oder gestalte alles frei auf dem Dashboard")}>
         <div className="grid gap-3 sm:grid-cols-3">
           {(Object.keys(PRESETS) as PresetId[]).map((p) => (
             <button
               key={p}
-              onClick={() => start(async () => { await saveDashboardLayout(presetLayout(p)); flash(`Vorlage „${PRESETS[p].label}“ aktiv`); })}
+              onClick={() => start(async () => { await saveDashboardLayout(presetLayout(p)); flash(t("Vorlage „{name}“ aktiv", { name: t(PRESETS[p].label) })); })}
               className="rounded-2xl border border-line p-4 text-left transition hover:border-accent hover:bg-accent-soft"
             >
               <LayoutGrid size={20} className="text-accent" />
-              <p className="mt-2 font-bold">{PRESETS[p].label}</p>
-              <p className="text-xs text-muted">{PRESETS[p].description}</p>
+              <p className="mt-2 font-bold">{t(PRESETS[p].label)}</p>
+              <p className="text-xs text-muted">{t(PRESETS[p].description)}</p>
             </button>
           ))}
         </div>
         <Link href="/dashboard" className="btn mt-4">
-          <LayoutGrid size={17} /> Dashboard frei gestalten
+          <LayoutGrid size={17} />{" "}{t("Dashboard frei gestalten")}
         </Link>
       </Card>
 
-      <Card title="Über Vierklee">
+      <Card title={t("Über Vierklee")}>
         <div className="flex items-center gap-4">
           <LogoMark size={56} />
           <p className="text-sm text-muted">
-            Vier Blätter, vier Konten: <b style={{ color: ACCOUNT_META.FIXKOSTEN.color }}>Fixkosten</b>, <b style={{ color: ACCOUNT_META.SPAREN.color }}>Sparen</b>,{" "}
-            <b style={{ color: ACCOUNT_META.NOTGROSCHEN.color }}>Notgroschen</b> und <b style={{ color: ACCOUNT_META.FREIZEIT.color }}>Freizeit</b>. Glück ist planbar. 🍀
+            {rich(t("Vier Blätter, vier Konten: <fix>Fixkosten</fix>, <spar>Sparen</spar>, <not>Notgroschen</not> und <frei>Freizeit</frei>. Glück ist planbar. 🍀"), {
+              fix: (x) => <b style={{ color: ACCOUNT_META.FIXKOSTEN.color }}>{x}</b>,
+              spar: (x) => <b style={{ color: ACCOUNT_META.SPAREN.color }}>{x}</b>,
+              not: (x) => <b style={{ color: ACCOUNT_META.NOTGROSCHEN.color }}>{x}</b>,
+              frei: (x) => <b style={{ color: ACCOUNT_META.FREIZEIT.color }}>{x}</b>,
+            })}
           </p>
         </div>
       </Card>
@@ -198,6 +206,7 @@ export function AnpassenClient({ appearance, accounts }: { appearance: Appearanc
 }
 
 function AccountEditor({ account, onSaved }: { account: AccountLite; onSaved: () => void }) {
+  const t = useT();
   const [name, setName] = useState(account.name);
   const [color, setColor] = useState(account.color);
   const [error, setError] = useState<string | null>(null);
@@ -236,7 +245,7 @@ function AccountEditor({ account, onSaved }: { account: AccountLite; onSaved: ()
           <button
             key={c}
             onClick={() => { setColor(c); save({ color: c }); }}
-            aria-label={`Farbe ${c}`}
+            aria-label={t("Farbe {c}", { c: c })}
             aria-pressed={color === c}
             className={`flex h-9 w-9 items-center justify-center rounded-full text-white transition hover:scale-110 ${color === c ? "ring-2 ring-fg ring-offset-2 ring-offset-surface" : ""}`}
             style={{ background: c }}
@@ -247,9 +256,9 @@ function AccountEditor({ account, onSaved }: { account: AccountLite; onSaved: ()
         <button
           onClick={() => { setColor(def.color); setName(def.label); save({ color: null, name: def.label }); }}
           className="chip ml-auto"
-          title="Name und Farbe zurücksetzen"
+          title={t("Name und Farbe zurücksetzen")}
         >
-          <RotateCcw size={14} /> Standard
+          <RotateCcw size={14} />{" "}{t("Standard")}
         </button>
       </div>
       {error && <p className="mt-2 text-sm text-bad">{error}</p>}

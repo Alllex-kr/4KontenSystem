@@ -9,7 +9,9 @@
  *  - Der Rest wird per Dauerauftrag auf Sparen, Notgroschen und Freizeit verteilt.
  *  - Ein Mindestpuffer auf dem Fixkostenkonto darf nie unterschritten werden.
  */
+import { intlLocale } from "@/lib/format";
 import type { AccountKind } from "./constants";
+import { msg } from "./i18n/translate";
 
 export interface PaymentLike {
   id?: string;
@@ -114,14 +116,14 @@ export function allocate(summary: MonthlySummary, settings: SettingsLike, balanc
 
   let available = income - fix;
   if (available < 0) {
-    warnings.push("Deine Fixkosten sind höher als dein Einkommen. Prüfe Ausgaben oder Einnahmen.");
+    warnings.push(msg("Deine Fixkosten sind höher als dein Einkommen. Prüfe Ausgaben oder Einnahmen."));
     available = 0;
   }
 
   const wantedReserve = Math.max(0, settings.reserveMonthlyCents ?? 0);
   const reserve = Math.min(wantedReserve, available);
   available -= reserve;
-  if (reserve < wantedReserve) warnings.push("Für den festgesetzten Rücklagen-Betrag reicht dein Einkommen nicht ganz.");
+  if (reserve < wantedReserve) warnings.push(msg("Für den festgesetzten Rücklagen-Betrag reicht dein Einkommen nicht ganz."));
 
   let notgroschen = Math.min(emergencyMissing, Math.round((income * settings.emergencyRatePct) / 100));
   notgroschen = Math.min(notgroschen, available);
@@ -133,10 +135,10 @@ export function allocate(summary: MonthlySummary, settings: SettingsLike, balanc
   const freizeit = available;
 
   if (income > 0 && freizeit < income * 0.05) {
-    warnings.push("Für Freizeit bleibt sehr wenig übrig. Sparquote oder Rücklagen prüfen.");
+    warnings.push(msg("Für Freizeit bleibt sehr wenig übrig. Sparquote oder Rücklagen prüfen."));
   }
   if (emergencyMissing > 0 && notgroschen === 0 && income > 0) {
-    warnings.push("Dein Notgroschen ist noch nicht vollständig, aber es ist kein Geld dafür übrig.");
+    warnings.push(msg("Dein Notgroschen ist noch nicht vollständig, aber es ist kein Geld dafür übrig."));
   }
 
   return {
@@ -274,7 +276,7 @@ export function projectBalances(balances: Balances, allocation: Allocation, mont
       spar += allocation.sparenCents + (allocation.notgroschenCents - toEmergency);
     }
     out.push({
-      label: d.toLocaleDateString("de-DE", { month: "short", year: "2-digit" }),
+      label: d.toLocaleDateString(intlLocale(), { month: "short", year: "2-digit" }),
       SPAREN: spar / 100,
       NOTGROSCHEN: not / 100,
       FREIZEIT: balances.FREIZEIT / 100,

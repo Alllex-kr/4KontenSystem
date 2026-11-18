@@ -45,6 +45,9 @@ import { LogoMark } from "@/components/brand/Logo";
 import { AnimatedNumber } from "@/components/motion/AnimatedNumber";
 import { AusgleichPanel, TodoList, TransfersPanel, type AccountInfo } from "@/components/planning/PlanningWidgets";
 import type { Ausgleich, Todo, TransferSuggestion } from "@/lib/planning";
+import { useT } from "@/lib/i18n/client";
+import { msg } from "@/lib/i18n/translate";
+import { rich } from "@/lib/i18n/rich";
 
 export type DashboardData = {
   firstName: string;
@@ -94,13 +97,13 @@ const SIZE_CLASS: Record<WidgetSize, string> = {
   full: "fold:col-span-6 xl:col-span-12",
 };
 const SIZE_LABEL: Record<WidgetSize, string> = { sm: "S", md: "M", lg: "L", full: "XL" };
-const SIZE_TITLE: Record<WidgetSize, string> = { sm: "Klein (ein Drittel)", md: "Mittel (halbe Breite)", lg: "Groß (zwei Drittel)", full: "Volle Breite" };
+const SIZE_TITLE: Record<WidgetSize, string> = { sm: msg("Klein (ein Drittel)"), md: msg("Mittel (halbe Breite)"), lg: msg("Groß (zwei Drittel)"), full: msg("Volle Breite") };
 
 function greeting(hour: number) {
-  if (hour < 5) return "Gute Nacht";
-  if (hour < 11) return "Guten Morgen";
-  if (hour < 18) return "Hallo";
-  return "Guten Abend";
+  if (hour < 5) return msg("Gute Nacht");
+  if (hour < 11) return msg("Guten Morgen");
+  if (hour < 18) return msg("Hallo");
+  return msg("Guten Abend");
 }
 
 export function DashboardClient({
@@ -118,6 +121,7 @@ export function DashboardClient({
   /** Widgets, deren Funktion im Abo fehlt */
   exclude?: WidgetId[];
 }) {
+  const t = useT();
   const [layout, setLayout] = useState(initialLayout);
   const [saved, setSaved] = useState(initialLayout);
   const [editing, setEditing] = useState(false);
@@ -162,7 +166,7 @@ export function DashboardClient({
       } else {
         setSaved(layout);
         setEditing(false);
-        setToast("Dashboard gespeichert 🍀");
+        setToast(t("Dashboard gespeichert 🍀"));
       }
       setTimeout(() => setToast(null), 2500);
     });
@@ -179,12 +183,12 @@ export function DashboardClient({
         <div className="min-w-0">
           <p className="text-sm font-semibold text-muted">{data.today}</p>
           <h1 className="text-2xl font-black tracking-tight sm:text-3xl">
-            {greeting(data.hour)}, {data.firstName}! <span aria-hidden className="inline-block animate-pop [animation-delay:300ms]">🍀</span>
+            {t(greeting(data.hour))}, {data.firstName}! <span aria-hidden className="inline-block animate-pop [animation-delay:300ms]">🍀</span>
           </h1>
         </div>
         {!editing && canCustomize && (
-          <button onClick={() => setEditing(true)} className="btn-ghost shrink-0 px-3" aria-label="Dashboard anpassen">
-            <LayoutGrid size={17} /> <span className="hidden sm:inline">Dashboard anpassen</span>
+          <button onClick={() => setEditing(true)} className="btn-ghost shrink-0 px-3" aria-label={t("Dashboard anpassen")}>
+            <LayoutGrid size={17} /> <span className="hidden sm:inline">{t("Dashboard anpassen")}</span>
           </button>
         )}
       </div>
@@ -194,22 +198,22 @@ export function DashboardClient({
         <div className="animate-fade-down animate-edit sticky top-[calc(3.5rem+var(--safe-top))] z-20 rounded-2xl border border-accent/40 bg-surface p-3 shadow-lg lg:top-4">
           <div className="flex flex-wrap items-center gap-2">
             <p className="mr-auto text-sm font-semibold">
-              <span className="text-accent">Bearbeiten:</span> Am Griff <GripVertical size={14} className="inline" /> ziehen, Größe wählen oder ausblenden.
+              {rich(t("<accent>Bearbeiten:</accent> Am Griff <grip></grip> ziehen, Größe wählen oder ausblenden."), { accent: (x) => <span className="text-accent">{x}</span>, grip: () => <GripVertical size={14} className="inline" /> })}
             </p>
-            <button onClick={cancel} className="btn-ghost">Abbrechen</button>
+            <button onClick={cancel} className="btn-ghost">{t("Abbrechen")}</button>
             <button onClick={finish} className="btn" disabled={pending}>
-              <Check size={17} /> {pending ? "Speichern …" : "Fertig"}
+              <Check size={17} /> {pending ? t("Speichern …") : t("Fertig")}
             </button>
           </div>
           <div className="mt-3 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
-            <span className="self-center text-xs font-bold uppercase tracking-wide text-muted">Vorlagen:</span>
+            <span className="self-center text-xs font-bold uppercase tracking-wide text-muted">{t("Vorlagen:")}</span>
             {(Object.keys(PRESETS) as PresetId[]).map((p) => (
-              <button key={p} onClick={() => setLayout(presetLayout(p))} className="chip" title={PRESETS[p].description}>
-                {PRESETS[p].label}
+              <button key={p} onClick={() => setLayout(presetLayout(p))} className="chip" title={t(PRESETS[p].description)}>
+                {t(PRESETS[p].label)}
               </button>
             ))}
             <button onClick={() => setLayout(presetLayout("standard"))} className="chip">
-              <RotateCcw size={14} /> Zurücksetzen
+              <RotateCcw size={14} />{" "}{t("Zurücksetzen")}
             </button>
           </div>
         </div>
@@ -220,25 +224,29 @@ export function DashboardClient({
         <>
           {data.showWelcome && data.isEmpty && (
             <Alert tone="info">
-              Willkommen bei Vierklee! Deine vier Konten sind angelegt. Trag als Nächstes Einkommen und Fixkosten unter{" "}
-              <Link href="/zahlungen" className="font-bold underline">Fixe Zahlungen</Link> ein, oder probier alles mit Beispieldaten aus.
+              {rich(t("Willkommen bei Vierklee! Deine vier Konten sind angelegt. Trag als Nächstes Einkommen und Fixkosten unter <link>Fixe Zahlungen</link> ein, oder probier alles mit Beispieldaten aus."), {
+                link: (x) => <Link href="/zahlungen" className="font-bold underline">{x}</Link>,
+              })}
             </Alert>
           )}
           {data.isEmpty && (
-            <EmptyState icon={<LogoMark size={48} />} title="Noch keine Daten" text="Lade ein typisches Studi-Budget als Beispiel, um alle Diagramme zu sehen. Du kannst es später jederzeit ersetzen.">
+            <EmptyState icon={<LogoMark size={48} />} title={t("Noch keine Daten")} text={t("Lade ein typisches Studi-Budget als Beispiel, um alle Diagramme zu sehen. Du kannst es später jederzeit ersetzen.")}>
               <form action={loadDemoData}>
-                <button className="btn"><Sparkles size={16} /> Beispieldaten laden</button>
+                <button className="btn"><Sparkles size={16} />{" "}{t("Beispieldaten laden")}</button>
               </form>
             </EmptyState>
           )}
           {data.warnings.map((w) => (
-            <Alert key={w}><AlertTriangle size={16} className="mr-2 inline" />{w}</Alert>
+            <Alert key={w}><AlertTriangle size={16} className="mr-2 inline" />{t(w)}</Alert>
           ))}
           {data.bufferWarning && (
             <Alert>
               <AlertTriangle size={16} className="mr-2 inline" />
-              Dein Fixkostenkonto fällt am {data.bufferWarning.date} voraussichtlich auf {formatCents(data.bufferWarning.cents)}, also unter den Mindestpuffer von{" "}
-              {formatCents(data.minBufferCents)}. Zahl rechtzeitig etwas ein.
+              {t("Dein Fixkostenkonto fällt am {date} voraussichtlich auf {amount}, also unter den Mindestpuffer von {buffer}. Zahl rechtzeitig etwas ein.", {
+                date: data.bufferWarning.date,
+                amount: formatCents(data.bufferWarning.cents),
+                buffer: formatCents(data.minBufferCents),
+              })}
             </Alert>
           )}
         </>
@@ -273,13 +281,13 @@ export function DashboardClient({
         </DragOverlay>
       </DndContext>
 
-      {editing && visible.length === 0 && <EmptyState title="Alle Widgets ausgeblendet" text="Füge unten Widgets hinzu oder wähle eine Vorlage." />}
+      {editing && visible.length === 0 && <EmptyState title={t("Alle Widgets ausgeblendet")} text={t("Füge unten Widgets hinzu oder wähle eine Vorlage.")} />}
 
       {/* Ausgeblendete Widgets */}
       {editing && hidden.length > 0 && (
         <section className="animate-fade-up rounded-2xl border border-dashed border-line-strong p-4">
-          <h2 className="font-bold">Weitere Widgets</h2>
-          <p className="text-xs text-muted">Tippe auf ein Widget, um es zum Dashboard hinzuzufügen.</p>
+          <h2 className="font-bold">{t("Weitere Widgets")}</h2>
+          <p className="text-xs text-muted">{t("Tippe auf ein Widget, um es zum Dashboard hinzuzufügen.")}</p>
           <div className="stagger mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
             {hidden.map((w) => (
               <button
@@ -289,8 +297,8 @@ export function DashboardClient({
               >
                 <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent"><Plus size={16} /></span>
                 <span>
-                  <span className="block text-sm font-bold">{WIDGETS[w.id].title}</span>
-                  <span className="block text-xs text-muted">{WIDGETS[w.id].description}</span>
+                  <span className="block text-sm font-bold">{t(WIDGETS[w.id].title)}</span>
+                  <span className="block text-xs text-muted">{t(WIDGETS[w.id].description)}</span>
                 </span>
               </button>
             ))}
@@ -326,6 +334,7 @@ function SortableWidget({
   onMove: (d: -1 | 1) => void;
   children: React.ReactNode;
 }) {
+  const t = useT();
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({ id: config.id, disabled: !editing });
   const style = { transform: CSS.Translate.toString(transform), transition };
 
@@ -338,17 +347,17 @@ function SortableWidget({
             {...attributes}
             {...listeners}
             className="icon-btn cursor-grab touch-none text-accent active:cursor-grabbing"
-            aria-label={`${WIDGETS[config.id].title} verschieben`}
+            aria-label={t("{title} verschieben", { title: t(WIDGETS[config.id].title) })}
           >
             <GripVertical size={18} />
           </button>
-          <span className="min-w-0 flex-1 truncate text-sm font-bold">{WIDGETS[config.id].title}</span>
-          <div className="hidden rounded-lg bg-surface p-0.5 fold:flex" role="group" aria-label="Größe">
+          <span className="min-w-0 flex-1 truncate text-sm font-bold">{t(WIDGETS[config.id].title)}</span>
+          <div className="hidden rounded-lg bg-surface p-0.5 fold:flex" role="group" aria-label={t("Größe")}>
             {(Object.keys(SIZE_LABEL) as WidgetSize[]).map((s) => (
               <button
                 key={s}
                 onClick={() => onSize(s)}
-                title={SIZE_TITLE[s]}
+                title={t(SIZE_TITLE[s])}
                 aria-pressed={config.size === s}
                 className={`h-8 min-w-8 rounded-md px-1.5 text-xs font-black transition duration-200 active:scale-90 ${config.size === s ? "bg-accent text-accent-fg" : "text-muted hover:text-fg"}`}
               >
@@ -356,13 +365,13 @@ function SortableWidget({
               </button>
             ))}
           </div>
-          <button onClick={() => onMove(-1)} disabled={isFirst} className="icon-btn disabled:opacity-30" aria-label="Nach oben">
+          <button onClick={() => onMove(-1)} disabled={isFirst} className="icon-btn disabled:opacity-30" aria-label={t("Nach oben")}>
             <ArrowUp size={17} />
           </button>
-          <button onClick={() => onMove(1)} disabled={isLast} className="icon-btn disabled:opacity-30" aria-label="Nach unten">
+          <button onClick={() => onMove(1)} disabled={isLast} className="icon-btn disabled:opacity-30" aria-label={t("Nach unten")}>
             <ArrowDown size={17} />
           </button>
-          <button onClick={onHide} className="icon-btn hover:text-bad" aria-label="Ausblenden">
+          <button onClick={onHide} className="icon-btn hover:text-bad" aria-label={t("Ausblenden")}>
             <EyeOff size={17} />
           </button>
         </div>
@@ -377,22 +386,24 @@ function SortableWidget({
 /* ------------------------------------------------------------------ */
 
 function Widget({ id, data, accounts }: { id: WidgetId; data: DashboardData; accounts: AccountLite[] }) {
-  const t = WIDGETS[id];
+  const t = useT();
+  const w = WIDGETS[id];
+  const item = { title: t(w.title), description: t(w.description) };
   switch (id) {
     case "todos":
       return (
-        <Card title={t.title} subtitle={data.todos.length ? `${data.todos.length} offen` : undefined}>
+        <Card title={item.title} subtitle={data.todos.length ? t("{length} offen", { length: data.todos.length }) : undefined}>
           <TodoList todos={data.todos} transfers={data.transfersSuggested} accounts={data.accountInfo} compact />
         </Card>
       );
 
     case "ausgleich":
       return (
-        <Card title={t.title} subtitle="Hält das Fixkostenkonto den Mindestpuffer? (Excel: Puffer & Ausgleichszahlung)">
+        <Card title={item.title} subtitle={t("Hält das Fixkostenkonto den Mindestpuffer? (Excel: Puffer & Ausgleichszahlung)")}>
           <AusgleichPanel ausgleich={data.ausgleich} minBufferCents={data.minBufferCents} accounts={data.accountInfo} suggestedSource={data.suggestedSource} />
           {(data.transfersSuggested.length > 0 || data.uncovered.length > 0) && (
             <div className="mt-5 border-t border-line pt-4">
-              <p className="mb-2 text-sm font-bold">Notwendige Überweisungen</p>
+              <p className="mb-2 text-sm font-bold">{t("Notwendige Überweisungen")}</p>
               <TransfersPanel transfers={data.transfersSuggested} uncovered={data.uncovered} accounts={data.accountInfo} />
             </div>
           )}
@@ -402,24 +413,24 @@ function Widget({ id, data, accounts }: { id: WidgetId; data: DashboardData; acc
     case "kpis":
       return (
         <div className="grid grid-cols-2 gap-3 @4xl:grid-cols-4">
-          <Stat icon={<Wallet size={14} />} label="Gesamtvermögen" cents={data.total} hint="Summe aller vier Konten" />
-          <Stat icon={<TrendingUp size={14} />} label="Einkommen / Monat" cents={data.incomeCents} hint={`Fixkosten: ${formatCents(data.fixedTotalCents)}`} />
+          <Stat icon={<Wallet size={14} />} label={t("Gesamtvermögen")} cents={data.total} hint={t("Summe aller vier Konten")} />
+          <Stat icon={<TrendingUp size={14} />} label={t("Einkommen / Monat")} cents={data.incomeCents} hint={t("Fixkosten: {v0}", { v0: formatCents(data.fixedTotalCents) })} />
           <Stat
             icon={<PartyPopper size={14} />}
-            label="Freizeit übrig"
+            label={t("Freizeit übrig")}
             cents={data.freizeitBudget - data.freizeitSpent}
             tone={data.freizeitBudget - data.freizeitSpent < 0 ? "bad" : "good"}
             hint={
               data.freizeitBudget - data.freizeitSpent > 0
-                ? `≈ ${formatCents(Math.floor((data.freizeitBudget - data.freizeitSpent) / data.daysLeft))} pro Tag bis Monatsende`
-                : "Budget für diesen Monat aufgebraucht"
+                ? t("≈ {v0} pro Tag bis Monatsende", { v0: formatCents(Math.floor((data.freizeitBudget - data.freizeitSpent) / data.daysLeft)) })
+                : t("Budget für diesen Monat aufgebraucht")
             }
           />
           <Stat
             icon={<PiggyBank size={14} />}
-            label="Sparrate / Monat"
+            label={t("Sparrate / Monat")}
             cents={data.savingsCents}
-            hint={data.incomeCents ? `${Math.round((data.savingsCents / data.incomeCents) * 100)} % des Einkommens` : "–"}
+            hint={data.incomeCents ? t("{v0} % des Einkommens", { v0: Math.round((data.savingsCents / data.incomeCents) * 100) }) : "–"}
           />
         </div>
       );
@@ -438,29 +449,29 @@ function Widget({ id, data, accounts }: { id: WidgetId; data: DashboardData; acc
                 </div>
                 <p className="tabular mt-1 text-2xl font-black"><AnimatedNumber cents={a.balanceCents} /></p>
                 <p className="mt-1 text-xs text-muted">
-                  {a.kind === "FIXKOSTEN" ? "Bedarf" : "Dauerauftrag"}: <span className="tabular font-bold text-fg">{formatCents(a.monthlyCents)}</span> / Monat
+                  {a.kind === "FIXKOSTEN" ? t("Bedarf") : t("Dauerauftrag")}: <span className="tabular font-bold text-fg">{formatCents(a.monthlyCents)}</span>{" "}{t("/ Monat")}
                 </p>
                 {a.kind === "NOTGROSCHEN" && (
                   <div className="mt-3">
                     <ProgressBar value={emergencyProgress} color={a.color} />
                     <p className="mt-1 text-xs text-muted">
-                      {Math.round(emergencyProgress * 100)} % von <span className="tabular">{formatCents(data.emergency.targetCents)}</span>
-                      {data.emergency.monthsTo ? ` · noch ca. ${data.emergency.monthsTo} Monate` : ""}
+                      {t("{pct} % von {amount}", { pct: Math.round(emergencyProgress * 100), amount: formatCents(data.emergency.targetCents) })}
+                      {data.emergency.monthsTo ? t(" · noch ca. {monthsTo} Monate", { monthsTo: data.emergency.monthsTo }) : ""}
                     </p>
                   </div>
                 )}
                 {a.kind === "FREIZEIT" && (
                   <div className="mt-3">
                     <ProgressBar value={data.freizeitBudget ? data.freizeitSpent / data.freizeitBudget : 0} color={a.color} />
-                    <p className="mt-1 text-xs text-muted"><span className="tabular">{formatCents(data.freizeitSpent)}</span> diesen Monat ausgegeben</p>
+                    <p className="mt-1 text-xs text-muted"><span className="tabular">{formatCents(data.freizeitSpent)}</span>{" "}{t("diesen Monat ausgegeben")}</p>
                   </div>
                 )}
                 {a.kind === "FIXKOSTEN" && (
                   <p className={`mt-3 text-xs font-semibold ${a.balanceCents < data.minBufferCents ? "text-bad" : "text-good"}`}>
-                    Mindestpuffer {formatCents(data.minBufferCents)} {a.balanceCents < data.minBufferCents ? "unterschritten" : "eingehalten ✓"}
+                    {a.balanceCents < data.minBufferCents ? t("Mindestpuffer {amount} unterschritten", { amount: formatCents(data.minBufferCents) }) : t("Mindestpuffer {amount} eingehalten ✓", { amount: formatCents(data.minBufferCents) })}
                   </p>
                 )}
-                {a.kind === "SPAREN" && <p className="mt-3 text-xs text-muted">In 12 Monaten: <span className="tabular font-bold text-fg">{formatCents(data.sparenIn12Cents)}</span></p>}
+                {a.kind === "SPAREN" && <p className="mt-3 text-xs text-muted">{t("In 12 Monaten:")}{" "}<span className="tabular font-bold text-fg">{formatCents(data.sparenIn12Cents)}</span></p>}
               </Link>
             );
           })}
@@ -475,7 +486,7 @@ function Widget({ id, data, accounts }: { id: WidgetId; data: DashboardData; acc
       const r = 52;
       const c = 2 * Math.PI * r;
       return (
-        <Card title={t.title} subtitle={`Noch ${data.daysLeft} Tage in diesem Monat`}>
+        <Card title={item.title} subtitle={t("Noch {daysLeft} Tage in diesem Monat", { daysLeft: data.daysLeft })}>
           <div className="flex flex-col items-center gap-4 @sm:flex-row">
             <svg width="132" height="132" viewBox="0 0 132 132" className="shrink-0" aria-hidden>
               <circle cx="66" cy="66" r={r} fill="none" strokeWidth="14" style={{ stroke: "var(--surface-2)" }} />
@@ -493,15 +504,15 @@ function Widget({ id, data, accounts }: { id: WidgetId; data: DashboardData; acc
                 className="ring-fill"
                 style={{ ["--c" as string]: `${c}`, transition: "stroke-dashoffset 900ms var(--ease-out)" }}
               />
-              <text x="66" y="62" textAnchor="middle" className="fill-current text-[11px] font-bold" style={{ fill: "var(--muted)" }}>übrig</text>
+              <text x="66" y="62" textAnchor="middle" className="fill-current text-[11px] font-bold" style={{ fill: "var(--muted)" }}>{t("übrig")}</text>
               <text x="66" y="82" textAnchor="middle" className="text-[18px] font-black" style={{ fill: "var(--fg)" }}>{Math.round((1 - pct) * 100)} %</text>
             </svg>
             <div className="w-full text-center @sm:text-left">
               <p className={`tabular text-3xl font-black ${left < 0 ? "text-bad" : ""}`}><AnimatedNumber cents={left} /></p>
-              <p className="text-sm text-muted">von <span className="tabular">{formatCents(data.freizeitBudget)}</span> übrig</p>
-              {left > 0 && <p className="mt-2 rounded-xl bg-surface-2 px-3 py-2 text-sm font-semibold">≈ <span className="tabular">{formatCents(Math.floor(left / data.daysLeft))}</span> pro Tag</p>}
+              <p className="text-sm text-muted">{t("von {amount} übrig", { amount: formatCents(data.freizeitBudget) })}</p>
+              {left > 0 && <p className="mt-2 rounded-xl bg-surface-2 px-3 py-2 text-sm font-semibold">≈ <span className="tabular">{formatCents(Math.floor(left / data.daysLeft))}</span>{" "}{t("pro Tag")}</p>}
               <p className="mt-2 text-xs text-muted">
-                {pct > monthPct + 0.1 ? "Du gibst gerade schneller aus als geplant." : "Du liegst gut im Plan. 👌"}
+                {pct > monthPct + 0.1 ? t("Du gibst gerade schneller aus als geplant.") : t("Du liegst gut im Plan. 👌")}
               </p>
             </div>
           </div>
@@ -511,7 +522,7 @@ function Widget({ id, data, accounts }: { id: WidgetId; data: DashboardData; acc
 
     case "quickadd":
       return (
-        <Card title={t.title} subtitle="Ausgabe in Sekunden eintragen">
+        <Card title={item.title} subtitle={t("Ausgabe in Sekunden eintragen")}>
           <QuickAdd accounts={accounts} compact />
         </Card>
       );
@@ -520,12 +531,12 @@ function Widget({ id, data, accounts }: { id: WidgetId; data: DashboardData; acc
       const monthlyOf = (k: AccountKind) => (data.accounts.find((a) => a.kind === k)?.monthlyCents ?? 0) - (k === data.reserveAccountKind ? data.reserveCents : 0);
       const slices: Slice[] = [
         ...(["FIXKOSTEN"] as AccountKind[]).map((k) => ({ name: data.names[k], value: monthlyOf(k) / 100, color: data.colors[k] })),
-        ...(data.reserveCents > 0 ? [{ name: "Rücklagen", value: data.reserveCents / 100, color: "#14b8a6" }] : []),
+        ...(data.reserveCents > 0 ? [{ name: t("Rücklagen"), value: data.reserveCents / 100, color: "#14b8a6" }] : []),
         ...(["NOTGROSCHEN", "SPAREN", "FREIZEIT"] as AccountKind[]).map((k) => ({ name: data.names[k], value: monthlyOf(k) / 100, color: data.colors[k] })),
       ];
       return (
-        <Card title={t.title} subtitle="So wird dein Einkommen aufgeteilt">
-          <DonutChart data={slices} centerLabel="Einkommen" centerValue={formatCents(data.incomeCents)} />
+        <Card title={item.title} subtitle={t("So wird dein Einkommen aufgeteilt")}>
+          <DonutChart data={slices} centerLabel={t("Einkommen")} centerValue={formatCents(data.incomeCents)} />
           <Legendary data={slices} />
         </Card>
       );
@@ -533,14 +544,14 @@ function Widget({ id, data, accounts }: { id: WidgetId; data: DashboardData; acc
 
     case "forecast":
       return (
-        <Card title={t.title} subtitle="Prognose für 60 Tage mit allen fixen Zahlungen und Daueraufträgen">
+        <Card title={item.title} subtitle={t("Prognose für 60 Tage mit allen fixen Zahlungen und Daueraufträgen")}>
           <ForecastChart data={data.forecast} buffer={data.minBufferCents / 100} color={data.colors.FIXKOSTEN} />
         </Card>
       );
 
     case "projection":
       return (
-        <Card title={t.title} subtitle="Sparen und Notgroschen in 12 Monaten, wenn du dranbleibst">
+        <Card title={item.title} subtitle={t("Sparen und Notgroschen in 12 Monaten, wenn du dranbleibst")}>
           <ProjectionChart data={data.projection} colors={data.colors} labels={data.names} />
         </Card>
       );
@@ -548,8 +559,8 @@ function Widget({ id, data, accounts }: { id: WidgetId; data: DashboardData; acc
     case "balances": {
       const slices = data.accounts.map((a) => ({ name: a.name, value: Math.max(0, a.balanceCents) / 100, color: a.color }));
       return (
-        <Card title={t.title} subtitle="Aktuelle Kontostände">
-          <DonutChart data={slices} centerLabel="Gesamt" centerValue={formatCents(data.total)} />
+        <Card title={item.title} subtitle={t("Aktuelle Kontostände")}>
+          <DonutChart data={slices} centerLabel={t("Gesamt")} centerValue={formatCents(data.total)} />
           <Legendary data={slices} />
         </Card>
       );
@@ -557,14 +568,14 @@ function Widget({ id, data, accounts }: { id: WidgetId; data: DashboardData; acc
 
     case "cashflow":
       return (
-        <Card title={t.title} subtitle="Gebuchte Beträge der letzten 6 Monate (ohne Umbuchungen)">
-          <BarsChart data={data.cashflow} series={[{ key: "Einnahmen", name: "Einnahmen", color: "#10b981" }, { key: "Ausgaben", name: "Ausgaben", color: "#ef4444" }]} />
+        <Card title={item.title} subtitle={t("Gebuchte Beträge der letzten 6 Monate (ohne Umbuchungen)")}>
+          <BarsChart data={data.cashflow} series={[{ key: "Einnahmen", name: t("Einnahmen"), color: "#10b981" }, { key: "Ausgaben", name: t("Ausgaben"), color: "#ef4444" }]} />
         </Card>
       );
 
     case "categories":
       return (
-        <Card title={t.title} subtitle="Dieser Monat">
+        <Card title={item.title} subtitle={t("Dieser Monat")}>
           <DonutChart data={data.categories} />
           <Legendary data={data.categories.slice(0, 6)} />
         </Card>
@@ -572,7 +583,7 @@ function Widget({ id, data, accounts }: { id: WidgetId; data: DashboardData; acc
 
     case "transfers":
       return (
-        <Card title={t.title} subtitle={`Empfehlung: jeweils am ${data.transferDay}. des Monats vom Fixkostenkonto`}>
+        <Card title={item.title} subtitle={t("Empfehlung: jeweils am {transferDay}. des Monats vom Fixkostenkonto", { transferDay: data.transferDay })}>
           <ul className="divide-y divide-line text-sm">
             {(["NOTGROSCHEN", "SPAREN", "FREIZEIT"] as AccountKind[]).map((k) => (
               <li key={k} className="flex items-center justify-between gap-2 py-2.5">
@@ -587,16 +598,16 @@ function Widget({ id, data, accounts }: { id: WidgetId; data: DashboardData; acc
             ))}
           </ul>
           {data.emergency.reached && data.emergency.targetCents > 0 && (
-            <p className="mt-3 flex items-center gap-2 text-sm font-semibold text-good"><CheckCircle2 size={16} /> Notgroschen voll! Der Anteil geht jetzt in Freizeit &amp; Sparen.</p>
+            <p className="mt-3 flex items-center gap-2 text-sm font-semibold text-good"><CheckCircle2 size={16} />{" "}{t("Notgroschen voll! Der Anteil geht jetzt in Freizeit & Sparen.")}</p>
           )}
         </Card>
       );
 
     case "goals":
       return (
-        <Card title={t.title} action={<Link href="/ziele" className="text-sm font-bold text-accent">Alle</Link>}>
+        <Card title={item.title} action={<Link href="/ziele" className="text-sm font-bold text-accent">{t("Alle")}</Link>}>
           {data.goals.length === 0 ? (
-            <p className="text-sm text-muted">Noch keine Sparziele. <Link className="font-bold text-accent" href="/ziele">Jetzt anlegen</Link></p>
+            <p className="text-sm text-muted">{t("Noch keine Sparziele.")}{" "}<Link className="font-bold text-accent" href="/ziele">{t("Jetzt anlegen")}</Link></p>
           ) : (
             <ul className="space-y-4">
               {data.goals.slice(0, 4).map((g) => (
@@ -615,9 +626,9 @@ function Widget({ id, data, accounts }: { id: WidgetId; data: DashboardData; acc
 
     case "recent":
       return (
-        <Card title={t.title} action={<Link href="/transaktionen" className="text-sm font-bold text-accent">Alle</Link>}>
+        <Card title={item.title} action={<Link href="/transaktionen" className="text-sm font-bold text-accent">{t("Alle")}</Link>}>
           {data.recent.length === 0 ? (
-            <p className="text-sm text-muted">Noch keine Buchungen. Tippe auf <b>+</b>, um die erste einzutragen.</p>
+            <p className="text-sm text-muted">{rich(t("Noch keine Buchungen. Tippe auf <b>+</b>, um die erste einzutragen."), { b: (x) => <b>{x}</b> })}</p>
           ) : (
             <ul className="stagger divide-y divide-line text-sm @3xl:grid @3xl:grid-cols-2 @3xl:gap-x-8 @3xl:divide-y-0">
               {data.recent.map((r) => (
@@ -626,7 +637,7 @@ function Widget({ id, data, accounts }: { id: WidgetId; data: DashboardData; acc
                     <span className="h-9 w-1.5 shrink-0 rounded-full" style={{ background: data.colors[r.accountKind] }} />
                     <span className="min-w-0">
                       <span className="block truncate font-semibold">{r.description}</span>
-                      <span className="block truncate text-xs text-muted">{r.date} · {r.accountName} · {r.category}</span>
+                      <span className="block truncate text-xs text-muted">{r.date} · {r.accountName} · {t(r.category)}</span>
                     </span>
                   </span>
                   <span className={`tabular shrink-0 font-black ${r.amountCents < 0 ? "text-bad" : "text-good"}`}>{formatCents(r.amountCents)}</span>

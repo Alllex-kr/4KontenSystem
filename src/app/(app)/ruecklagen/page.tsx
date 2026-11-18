@@ -4,10 +4,15 @@ import { FeatureLocked } from "@/components/FeatureLocked";
 import { loadPlanning } from "@/lib/planningData";
 import { PageHeader } from "@/components/ui";
 import { ReserveClient, type ReserveItemView } from "./ReserveClient";
+import { getT } from "@/lib/i18n/server";
 
-export const metadata = { title: "Rücklagen" };
+export async function generateMetadata() {
+  const t = await getT();
+  return { title: t("Rücklagen") };
+}
 
 export default async function RuecklagenPage() {
+  const t = await getT();
   const user = await requireUser();
   const access = await getAccess(user.id);
   if (!access.permissions.has("reserves.use")) return <FeatureLocked feature="reserves.use" planName={access.plan?.name} />;
@@ -43,8 +48,8 @@ export default async function RuecklagenPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Rücklagen"
-        subtitle="Für Ausgaben, die sicher kommen, aber nicht jeden Monat: Geschenke, Urlaub, ein neuer Laptop. Vierklee rechnet aus, wie viel du dafür monatlich zurücklegen solltest."
+        title={t("Rücklagen")}
+        subtitle={t("Für Ausgaben, die sicher kommen, aber nicht jeden Monat: Geschenke, Urlaub, ein neuer Laptop. Vierklee rechnet aus, wie viel du dafür monatlich zurücklegen solltest.")}
       />
       <ReserveClient
         items={items}

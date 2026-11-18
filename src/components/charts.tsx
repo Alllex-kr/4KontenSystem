@@ -1,5 +1,7 @@
 "use client";
 
+import { intlLocale } from "@/lib/format";
+
 import { useEffect, useState } from "react";
 import { prefersReducedMotion } from "@/lib/motion";
 import {
@@ -20,9 +22,11 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useT } from "@/lib/i18n/client";
 
-const eur = new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
-const eur2 = new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" });
+// Formatierer in der Sprache des Nutzers
+const eur = { format: (n: number) => new Intl.NumberFormat(intlLocale(), { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(n) };
+const eur2 = { format: (n: number) => new Intl.NumberFormat(intlLocale(), { style: "currency", currency: "EUR" }).format(n) };
 const compactEur = (v: number) => (Math.abs(v) >= 10000 ? `${Math.round(v / 1000)} T€` : eur.format(v));
 const tipEur = (v: unknown) => eur2.format(Number(v));
 
@@ -132,6 +136,7 @@ export function Legendary({ data }: { data: Slice[] }) {
 
 /** Tagesprognose des Fixkostenkontos mit Mindestpuffer-Linie. */
 export function ForecastChart({ data, buffer, color = "#3b82f6" }: { data: { label: string; balance: number }[]; buffer: number; color?: string }) {
+  const tr = useT();
   const { t, axis, tooltip, yWidth, compact } = useCommon();
   return (
     <div className={compact ? "h-56" : "h-72"}>
@@ -146,9 +151,9 @@ export function ForecastChart({ data, buffer, color = "#3b82f6" }: { data: { lab
           <CartesianGrid strokeDasharray="3 3" stroke={t.grid} vertical={false} />
           <XAxis dataKey="label" tick={axis} interval="preserveStartEnd" minTickGap={compact ? 32 : 24} stroke={t.grid} />
           <YAxis tick={axis} tickFormatter={compactEur} width={yWidth} stroke={t.grid} />
-          <Tooltip formatter={tipEur} labelFormatter={(l) => `Datum: ${l}`} {...tooltip} cursor={{ stroke: t.line }} />
-          <ReferenceLine y={buffer} ifOverflow="extendDomain" stroke="#ef4444" strokeDasharray="6 4" label={{ value: "Mindestpuffer", fill: "#ef4444", fontSize: 11, position: "insideTopRight" }} />
-          <Area type="stepAfter" dataKey="balance" name="Kontostand" stroke={color} strokeWidth={2.5} fill="url(#fc)" isAnimationActive={t.animate} animationDuration={1100} animationEasing="ease-out" />
+          <Tooltip formatter={tipEur} labelFormatter={(l) => `${tr("Datum")}: ${l}`} {...tooltip} cursor={{ stroke: t.line }} />
+          <ReferenceLine y={buffer} ifOverflow="extendDomain" stroke="#ef4444" strokeDasharray="6 4" label={{ value: tr("Mindestpuffer"), fill: "#ef4444", fontSize: 11, position: "insideTopRight" }} />
+          <Area type="stepAfter" dataKey="balance" name={tr("Kontostand")} stroke={color} strokeWidth={2.5} fill="url(#fc)" isAnimationActive={t.animate} animationDuration={1100} animationEasing="ease-out" />
         </AreaChart>
       </ResponsiveContainer>
     </div>
@@ -225,6 +230,7 @@ export function BarsChart({
 
 /** Jahresverlauf der Rücklage. */
 export function ReserveChart({ data }: { data: { label: string; reserve: number; due: number }[] }) {
+  const tr = useT();
   const { t, axis, tooltip, yWidth, compact } = useCommon();
   return (
     <div className={compact ? "h-56" : "h-72"}>
@@ -235,8 +241,8 @@ export function ReserveChart({ data }: { data: { label: string; reserve: number;
           <YAxis tick={axis} tickFormatter={compactEur} width={yWidth} stroke={t.grid} />
           <Tooltip formatter={tipEur} {...tooltip} cursor={{ stroke: t.line }} />
           <Legend wrapperStyle={{ fontSize: 12 }} />
-          <Line type="monotone" dataKey="reserve" name="Rücklage" stroke="#3b82f6" strokeWidth={2.5} dot={{ r: 3 }} isAnimationActive={t.animate} animationDuration={1100} animationEasing="ease-out" />
-          <Line type="monotone" dataKey="due" name="Fällige Zahlungen" stroke="#ef4444" strokeWidth={2} strokeDasharray="5 4" dot={{ r: 3 }} isAnimationActive={t.animate} animationDuration={1100} animationEasing="ease-out" />
+          <Line type="monotone" dataKey="reserve" name={tr("Rücklage")} stroke="#3b82f6" strokeWidth={2.5} dot={{ r: 3 }} isAnimationActive={t.animate} animationDuration={1100} animationEasing="ease-out" />
+          <Line type="monotone" dataKey="due" name={tr("Fällige Zahlungen")} stroke="#ef4444" strokeWidth={2} strokeDasharray="5 4" dot={{ r: 3 }} isAnimationActive={t.animate} animationDuration={1100} animationEasing="ease-out" />
         </LineChart>
       </ResponsiveContainer>
     </div>
@@ -245,13 +251,14 @@ export function ReserveChart({ data }: { data: { label: string; reserve: number;
 
 /** Fortschrittsringe, value 0–100 (eigene SVG-Ringe). */
 export function RadialProgress({ data }: { data: { name: string; value: number; fill: string }[] }) {
+  const t = useT();
   if (!data.length) return <Empty />;
   const size = 200;
   const stroke = 14;
   const gap = 6;
   return (
     <div className="flex flex-col items-center gap-6 @md:flex-row @md:justify-center">
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label="Fortschritt der Sparziele">
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label={t("Fortschritt der Sparziele")}>
         {data.slice(0, 5).map((d, i) => {
           const r = size / 2 - stroke / 2 - i * (stroke + gap);
           const c = 2 * Math.PI * r;
@@ -280,5 +287,6 @@ export function RadialProgress({ data }: { data: { name: string; value: number; 
 }
 
 function Empty() {
-  return <div className="flex h-40 items-center justify-center text-sm text-subtle">Noch keine Daten</div>;
+  const t = useT();
+  return <div className="flex h-40 items-center justify-center text-sm text-subtle">{t("Noch keine Daten")}</div>;
 }

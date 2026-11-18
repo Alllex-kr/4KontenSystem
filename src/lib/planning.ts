@@ -7,6 +7,7 @@
  */
 import type { AccountKind } from "./constants";
 import { irregularPurchaseStats } from "./finance";
+import { interpolate, msg } from "./i18n/translate";
 
 const DAY = 86_400_000;
 const MONTH_DAYS = 30.4375;
@@ -167,9 +168,10 @@ export function ausgleich(lowestCents: number, lowestDate: string, minBufferCent
  * Zusatz-Zahlung (Excel: "+ Einzahlung / − Auszahlung"): ergibt die Überweisung zwischen Fixkostenkonto und Gegenkonto.
  * Positiv = aufs Fixkostenkonto, negativ = vom Fixkostenkonto weg. Eine Auszahlung darf den Mindestpuffer nicht unterschreiten.
  */
-export function ausgleichsUeberweisung(a: Ausgleich, zusatzCents: number): { transferCents: number; error?: string } {
+/** error ist ein Übersetzungsschlüssel; errorVars.amount in Cent. */
+export function ausgleichsUeberweisung(a: Ausgleich, zusatzCents: number): { transferCents: number; error?: string; errorVars?: { amount: number } } {
   if (zusatzCents < 0 && -zusatzCents > a.maxPayoutCents) {
-    return { transferCents: 0, error: `Maximal ${(a.maxPayoutCents / 100).toFixed(2).replace(".", ",")} € können vom Fixkostenkonto weg, ohne den Mindestpuffer zu unterschreiten.` };
+    return { transferCents: 0, error: msg("Maximal {amount} können vom Fixkostenkonto weg, ohne den Mindestpuffer zu unterschreiten."), errorVars: { amount: a.maxPayoutCents } };
   }
   return { transferCents: a.requiredInCents + zusatzCents };
 }
@@ -202,10 +204,10 @@ const roundUpEuro = (c: number) => Math.ceil(c / 100) * 100;
  */
 export function rebalance(input: RebalanceInput): { transfers: TransferSuggestion[]; uncovered: { to: AccountKind; amountCents: number; reason: string }[] } {
   const deficits: { to: AccountKind; amount: number; reason: string }[] = [];
-  if (input.fixSurplusCents < 0) deficits.push({ to: "FIXKOSTEN", amount: roundUpEuro(-input.fixSurplusCents), reason: "Mindestpuffer auf dem Fixkostenkonto halten" });
+  if (input.fixSurplusCents < 0) deficits.push({ to: "FIXKOSTEN", amount: roundUpEuro(-input.fixSurplusCents), reason: msg("Mindestpuffer auf dem Fixkostenkonto halten") });
   const r = input.reserve;
   const reserveAvail = input.balances[r.accountKind] - r.earmarkedCents;
-  if (r.sollCents > 0 && reserveAvail < r.sollCents) deficits.push({ to: r.accountKind, amount: roundUpEuro(r.sollCents - reserveAvail), reason: "Rücklagen auf Soll-Stand bringen" });
+  if (r.sollCents > 0 && reserveAvail < r.sollCents) deficits.push({ to: r.accountKind, amount: roundUpEuro(r.sollCents - reserveAvail), reason: msg("Rücklagen auf Soll-Stand bringen") });
 
   const surpluses: { from: AccountKind; amount: number }[] = [];
   if (input.fixSurplusCents > 0) surpluses.push({ from: "FIXKOSTEN", amount: Math.floor(input.fixSurplusCents / 100) * 100 });
@@ -283,54 +285,57 @@ export function buildTodos(input: {
   names: Record<AccountKind, string>;
   fmt: (c: number) => string;
   fmtDate: (d: Date | string) => string;
+  /** Übersetzung (ohne: Deutsch) */
+  t?: (key: string, vars?: Record<string, string | number | null | undefined>) => string;
 }): Todo[] {
-  const t: Todo[] = [];
+  const todos: Todo[] = [];
   const { fmt, fmtDate, names } = input;
+  const t = input.t ?? interpolate;
   if (input.ausgleich.requiredInCents > 0) {
-    t.push({
+    todos.push({
       id: "ausgleich",
       kind: "ausgleich",
       severity: "high",
-      title: `Ausgleichszahlung: ${fmt(roundUpEuro(input.ausgleich.requiredInCents))} aufs ${names.FIXKOSTEN}`,
-      detail: `Sonst fällt es am ${fmtDate(input.ausgleich.lowestDate)} unter den Mindestpuffer.`,
+      title: t("Ausgleichszahlung: {amount} aufs {account}", { amount: fmt(roundUpEuro(input.ausgleich.requiredInCents)), account: names.FIXKOSTEN }),
+      detail: t("Sonst fällt es am {date} unter den Mindestpuffer.", { date: fmtDate(input.ausgleich.lowestDate) }),
     });
   }
   input.transfers
     .filter((x) => !(x.to === "FIXKOSTEN" && input.ausgleich.requiredInCents > 0))
-    .forEach((x, i) => t.push({ id: `transfer-${i}`, kind: "transfer", severity: "medium", title: `${names[x.from]} → ${names[x.to]}: ${fmt(x.amountCents)}`, detail: x.reason }));
+    .forEach((x, i) => todos.push({ id: `transfer-${i}`, kind: "transfer", severity: "medium", title: `${names[x.from]} → ${names[x.to]}: ${fmt(x.amountCents)}`, detail: t(x.reason) }));
   input.uncovered
     .filter((u) => u.to !== "FIXKOSTEN")
-    .forEach((u, i) => t.push({ id: `uncovered-${i}`, kind: "transfer", severity: "medium", title: `${names[u.to]}: ${fmt(u.amountCents)} fehlen`, detail: `${u.reason}. Kein anderes Konto hat gerade genug übrig.` }));
+    .forEach((u, i) => todos.push({ id: `uncovered-${i}`, kind: "transfer", severity: "medium", title: t("{account}: {amount} fehlen", { account: names[u.to], amount: fmt(u.amountCents) }), detail: `${t(u.reason)}. ${t("Kein anderes Konto hat gerade genug übrig.")}` }));
   if (input.ordersDiff.length) {
-    t.push({
+    todos.push({
       id: "orders",
       kind: "orders",
       severity: "medium",
-      title: input.hasConfirmedOrders ? "Daueraufträge anpassen" : "Daueraufträge einrichten",
+      title: input.hasConfirmedOrders ? t("Daueraufträge anpassen") : t("Daueraufträge einrichten"),
       detail: input.ordersDiff.map((d) => `${names[d.kind]}: ${d.fromCents == null ? "" : `${fmt(d.fromCents)} → `}${fmt(d.toCents)}`).join(" · "),
     });
   }
   input.staleAccounts.forEach((a) =>
-    t.push({
+    todos.push({
       id: `balance-${a.kind}`,
       kind: "balance",
       severity: "low",
-      title: `Kontostand abgleichen: ${a.name}`,
-      detail: a.days == null ? "Noch nie mit der Bank abgeglichen." : `Zuletzt vor ${a.days} Tagen abgeglichen.`,
+      title: t("Kontostand abgleichen: {account}", { account: a.name }),
+      detail: a.days == null ? t("Noch nie mit der Bank abgeglichen.") : t("Zuletzt vor {days} Tagen abgeglichen.", { days: a.days }),
     }),
   );
   if (input.reserveUnderplanned) {
-    t.push({ id: "reserve", kind: "reserve", severity: "medium", title: "Rücklagen: aktuell zu wenig eingeplant", detail: "Der festgesetzte Monatsbetrag liegt unter der Prognose." });
+    todos.push({ id: "reserve", kind: "reserve", severity: "medium", title: t("Rücklagen: aktuell zu wenig eingeplant"), detail: t("Der festgesetzte Monatsbetrag liegt unter der Prognose.") });
   }
   input.dueSoon.forEach((d) =>
-    t.push({
+    todos.push({
       id: `due-${d.id}`,
       kind: "due",
       severity: d.accruedCents < d.targetCents ? "medium" : "low",
-      title: `${d.name} fällig am ${fmtDate(d.date)}`,
-      detail: `Geplant ${fmt(d.targetCents)}, angespart ${fmt(d.accruedCents)}.`,
+      title: t("{name} fällig am {date}", { name: d.name, date: fmtDate(d.date) }),
+      detail: t("Geplant {planned}, angespart {saved}.", { planned: fmt(d.targetCents), saved: fmt(d.accruedCents) }),
     }),
   );
   const order = { high: 0, medium: 1, low: 2 };
-  return t.sort((a, b) => order[a.severity] - order[b.severity]);
+  return todos.sort((a, b) => order[a.severity] - order[b.severity]);
 }

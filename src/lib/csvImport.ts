@@ -10,19 +10,20 @@
  *  - Datum wie "18.11.2026", "18.11.26", "2026-11-18"
  */
 import type { Category } from "./constants";
+import { msg } from "./i18n/translate";
 
 export type Field = "date" | "amount" | "debit" | "credit" | "payee" | "payee2" | "purpose" | "balance";
 export type Mapping = Partial<Record<Field, number>>;
 
 export const FIELD_LABELS: Record<Field, string> = {
-  date: "Datum",
-  amount: "Betrag",
-  payee: "Empfänger / Auftraggeber",
-  payee2: "Zahlungspflichtiger (bei Eingängen)",
-  purpose: "Verwendungszweck",
-  balance: "Saldo / Kontostand",
-  debit: "Soll (Ausgang)",
-  credit: "Haben (Eingang)",
+  date: msg("Datum"),
+  amount: msg("Betrag"),
+  payee: msg("Empfänger / Auftraggeber"),
+  payee2: msg("Zahlungspflichtiger (bei Eingängen)"),
+  purpose: msg("Verwendungszweck"),
+  balance: msg("Saldo / Kontostand"),
+  debit: msg("Soll (Ausgang)"),
+  credit: msg("Haben (Eingang)"),
 };
 
 export interface ParsedRow {
@@ -441,10 +442,10 @@ export interface CsvAnalysis {
 
 export function analyzeCsv(input: ArrayBuffer | Uint8Array | string): CsvAnalysis | { error: string } {
   const { text, encoding } = typeof input === "string" ? { text: input.replace(/^﻿/, ""), encoding: "UTF-8" } : decodeBytes(input);
-  if (!text.trim()) return { error: "Die Datei ist leer." };
+  if (!text.trim()) return { error: msg("Die Datei ist leer.") };
   const delimiter = detectDelimiter(text);
   const table = parseCsv(text, delimiter);
-  if (table.length < 2) return { error: "In der Datei wurden keine Umsätze gefunden." };
+  if (table.length < 2) return { error: msg("In der Datei wurden keine Umsätze gefunden.") };
   const found = findHeaderRow(table);
   if (!found) {
     return {

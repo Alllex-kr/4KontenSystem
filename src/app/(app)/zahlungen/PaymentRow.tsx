@@ -5,6 +5,7 @@ import { Pencil, Pause, Play, Trash2 } from "lucide-react";
 import { deletePaymentUndoable, restorePayment, togglePayment } from "@/actions/finance";
 import { UndoDelete } from "@/components/UndoDelete";
 import { PaymentForm, type PaymentFormValues } from "./PaymentForm";
+import { useT } from "@/lib/i18n/client";
 
 export function PaymentRow({
   values,
@@ -17,25 +18,26 @@ export function PaymentRow({
   summary: React.ReactNode;
   active: boolean;
 }) {
+  const t = useT();
   const [editing, setEditing] = useState(false);
   return (
     <li className={`py-3 ${active ? "" : "opacity-50"}`}>
       <div className="flex items-center gap-1 sm:gap-2">
         <div className="min-w-0 flex-1 pr-1">{summary}</div>
-        <button title="Bearbeiten" onClick={() => setEditing((e) => !e)} className="icon-btn">
+        <button title={t("Bearbeiten")} onClick={() => setEditing((e) => !e)} className="icon-btn">
           <Pencil size={16} />
         </button>
         <form action={togglePayment}>
           <input type="hidden" name="id" value={values.id} />
-          <button title={active ? "Pausieren" : "Aktivieren"} className="icon-btn">
+          <button title={active ? t("Pausieren") : t("Aktivieren")} className="icon-btn">
             {active ? <Pause size={16} /> : <Play size={16} />}
           </button>
         </form>
         <UndoDelete
           onDelete={() => deletePaymentUndoable(values.id)}
           onRestore={restorePayment}
-          message={`„${values.name}“ gelöscht`}
-          label={`${values.name} löschen`}
+          message={t("„{name}“ gelöscht", { name: values.name })}
+          label={t("{name} löschen", { name: values.name })}
           className="icon-btn text-bad hover:bg-bad/10 hover:text-bad"
         />
       </div>

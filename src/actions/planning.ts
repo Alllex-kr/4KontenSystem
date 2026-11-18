@@ -11,6 +11,8 @@ import { loadOverview } from "@/lib/data";
 import { bookTransfer } from "@/lib/transfers";
 import { ordersValidFrom, reserveSummary } from "@/lib/planning";
 import type { ActionState } from "./types";
+import { getT } from "@/lib/i18n/server";
+import { msg } from "@/lib/i18n/translate";
 
 function refresh() {
   revalidatePath("/", "layout");
@@ -23,7 +25,7 @@ const optionalEuro = z
     if (!v || !v.trim()) return null;
     const c = parseEuroToCents(v);
     if (c === null || c < 0) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Bitte einen gültigen Betrag eingeben (z. B. 360,00)." });
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: msg("Bitte einen gültigen Betrag eingeben (z. B. 360,00).") });
       return z.NEVER;
     }
     return c;
@@ -35,7 +37,7 @@ const optionalInt = z
     if (!v || !v.trim()) return null;
     const n = Number(v);
     if (!Number.isInteger(n) || n < 1 || n > 240) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Intervall: ganze Monate zwischen 1 und 240." });
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: msg("Intervall: ganze Monate zwischen 1 und 240.") });
       return z.NEVER;
     }
     return n;
@@ -44,27 +46,28 @@ const optionalInt = z
 // ---------------------------------------------------------------- Rücklagen-Posten
 
 export async function saveReserveItem(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const t = await getT();
   const user = await requireFeature("reserves.use");
   const parsed = z
     .object({
       id: z.string().optional(),
-      name: z.string().trim().min(1, "Bitte eine Bezeichnung angeben.").max(60),
+      name: z.string().trim().min(1, msg("Bitte eine Bezeichnung angeben.")).max(60),
       kind: z.enum(["PLANNED", "IRREGULAR"]),
       interval: optionalInt,
       amount: optionalEuro,
     })
     .safeParse({ ...Object.fromEntries(formData), id: formData.get("id") || undefined });
-  if (!parsed.success) return { error: parsed.error.issues[0]?.message };
+  if (!parsed.success) return { error: t(parsed.error.issues[0]?.message) };
   const { id, name, kind, interval, amount } = parsed.data;
   const data = { name, kind, plannedIntervalMonths: interval, plannedAmountCents: amount };
   if (id) {
     const res = await prisma.reserveItem.updateMany({ where: { id, userId: user.id }, data });
-    if (!res.count) return { error: "Posten nicht gefunden." };
+    if (!res.count) return { error: t("Posten nicht gefunden.") };
   } else {
     await prisma.reserveItem.create({ data: { ...data, userId: user.id } });
   }
   refresh();
-  return { success: id ? "Posten gespeichert." : "Posten angelegt." };
+  return { success: id ? t("Posten gespeichert.") : t("Posten angelegt.") };
 }
 
 export async function setUseEffective(itemId: string, value: boolean) {
@@ -74,15 +77,16 @@ export async function setUseEffective(itemId: string, value: boolean) {
 }
 
 export async function addReservePurchase(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const t = await getT();
   const user = await requireFeature("reserves.use");
   const parsed = z
     .object({
       itemId: z.string(),
-      date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Bitte ein Datum wählen."),
+      date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, msg("Bitte ein Datum wählen.")),
       amount: z.string().transform((v, ctx) => {
         const c = parseEuroToCents(v);
         if (c === null || c <= 0) {
-          ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Bitte einen gültigen Betrag eingeben." });
+          ctx.addIssue({ code: z.ZodIssueCode.custom, message: msg("Bitte einen gültigen Betrag eingeben.") });
           return z.NEVER;
         }
         return c;
@@ -90,14 +94,14 @@ export async function addReservePurchase(_prev: ActionState, formData: FormData)
       note: z.string().trim().max(80).optional(),
     })
     .safeParse(Object.fromEntries(formData));
-  if (!parsed.success) return { error: parsed.error.issues[0]?.message };
+  if (!parsed.success) return { error: t(parsed.error.issues[0]?.message) };
   const item = await prisma.reserveItem.findFirst({ where: { id: parsed.data.itemId, userId: user.id } });
-  if (!item) return { error: "Posten nicht gefunden." };
+  if (!item) return { error: t("Posten nicht gefunden.") };
   await prisma.reservePurchase.create({
     data: { itemId: item.id, date: new Date(`${parsed.data.date}T12:00:00`), amountCents: parsed.data.amount, note: parsed.data.note || null },
   });
   refresh();
-  return { success: "Kauf dokumentiert." };
+  return { success: t("Kauf dokumentiert.") };
 }
 
 // Löschen mit "Rückgängig": Die Daten gehen an den Browser zurück und können wiederhergestellt werden.
@@ -134,9 +138,10 @@ export async function deleteReserveItem(id: string): Promise<ReserveItemSnapshot
 }
 
 export async function restoreReserveItem(snapshot: ReserveItemSnapshot): Promise<ActionState> {
+  const t = await getT();
   const user = await requireFeature("reserves.use");
   const s = itemSnap.safeParse(snapshot);
-  if (!s.success) return { error: "Wiederherstellen nicht möglich." };
+  if (!s.success) return { error: t("Wiederherstellen nicht möglich.") };
   const { purchases, createdAt, ...rest } = s.data;
   await prisma.reserveItem.create({
     data: {
@@ -160,11 +165,12 @@ export async function deleteReservePurchase(id: string): Promise<ReservePurchase
 }
 
 export async function restoreReservePurchase(snapshot: ReservePurchaseSnapshot): Promise<ActionState> {
+  const t = await getT();
   const user = await requireFeature("reserves.use");
   const s = purchaseSnap.safeParse(snapshot);
-  if (!s.success) return { error: "Wiederherstellen nicht möglich." };
+  if (!s.success) return { error: t("Wiederherstellen nicht möglich.") };
   const item = await prisma.reserveItem.findFirst({ where: { id: s.data.itemId, userId: user.id } });
-  if (!item) return { error: "Der Posten existiert nicht mehr." };
+  if (!item) return { error: t("Der Posten existiert nicht mehr.") };
   await prisma.reservePurchase.create({ data: { id: s.data.id, itemId: item.id, date: new Date(s.data.date), amountCents: s.data.amountCents, note: s.data.note } });
   refresh();
   return { success: "Wiederhergestellt." };
@@ -173,32 +179,34 @@ export async function restoreReservePurchase(snapshot: ReservePurchaseSnapshot):
 // ---------------------------------------------------------------- Rücklagen-Einstellungen
 
 export async function saveReserveSettings(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const t = await getT();
   const user = await requireFeature("reserves.use");
   const parsed = z
     .object({
       monthly: z.string().transform((v, ctx) => {
         const c = parseEuroToCents(v || "0");
         if (c === null || c < 0) {
-          ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Bitte einen gültigen Monatsbetrag eingeben." });
+          ctx.addIssue({ code: z.ZodIssueCode.custom, message: msg("Bitte einen gültigen Monatsbetrag eingeben.") });
           return z.NEVER;
         }
         return c;
       }),
-      tolerance: z.coerce.number().int().min(0, "Toleranz 0–50 %").max(50, "Toleranz 0–50 %"),
+      tolerance: z.coerce.number().int().min(0, msg("Toleranz 0–50 %")).max(50, msg("Toleranz 0–50 %")),
       accountKind: z.enum(["SPAREN", "NOTGROSCHEN"]),
     })
     .safeParse(Object.fromEntries(formData));
-  if (!parsed.success) return { error: parsed.error.issues[0]?.message };
+  if (!parsed.success) return { error: t(parsed.error.issues[0]?.message) };
   await prisma.settings.update({
     where: { userId: user.id },
     data: { reserveMonthlyCents: parsed.data.monthly, reserveTolerancePct: parsed.data.tolerance, reserveAccountKind: parsed.data.accountKind },
   });
   refresh();
-  return { success: "Rücklagen-Einstellungen gespeichert." };
+  return { success: t("Rücklagen-Einstellungen gespeichert.") };
 }
 
 /** Prognose als festgesetzten Monatsbetrag übernehmen (auf volle Euro aufgerundet). */
 export async function applyReserveForecast(): Promise<ActionState> {
+  const t = await getT();
   const user = await requireFeature("reserves.use");
   const [items, settings] = await Promise.all([
     prisma.reserveItem.findMany({ where: { userId: user.id }, include: { purchases: true } }),
@@ -208,13 +216,14 @@ export async function applyReserveForecast(): Promise<ActionState> {
   const rounded = Math.ceil(summary.forecastMonthlyCents / 100) * 100;
   await prisma.settings.update({ where: { userId: user.id }, data: { reserveMonthlyCents: rounded } });
   refresh();
-  return { success: "Prognose übernommen." };
+  return { success: t("Prognose übernommen.") };
 }
 
 // ---------------------------------------------------------------- Daueraufträge & Umbuchungen
 
 /** "Daueraufträge anpassen erledigt": aktuelle Empfehlung als eingerichtet merken, gültig ab dem 1. des nächsten Monats. */
 export async function confirmStandingOrders(): Promise<ActionState> {
+  const t = await getT();
   const user = await requireUser();
   const { allocation } = await loadOverview(user.id);
   await prisma.settings.update({
@@ -222,7 +231,7 @@ export async function confirmStandingOrders(): Promise<ActionState> {
     data: { confirmedOrders: JSON.stringify(allocation.orders), ordersValidFrom: ordersValidFrom(new Date()) },
   });
   refresh();
-  return { success: "Daueraufträge als eingerichtet gemerkt." };
+  return { success: t("Daueraufträge als eingerichtet gemerkt.") };
 }
 
 const transferSchema = z.object({
@@ -234,15 +243,16 @@ const transferSchema = z.object({
 
 /** Vorgeschlagene Umbuchung als erledigt verbuchen (die echte Überweisung machst du in deiner Bank-App). */
 export async function bookSuggestedTransfer(input: z.input<typeof transferSchema>): Promise<ActionState> {
+  const t = await getT();
   const user = await requireUser();
   const parsed = transferSchema.safeParse(input);
-  if (!parsed.success) return { error: "Ungültige Umbuchung." };
+  if (!parsed.success) return { error: t("Ungültige Umbuchung.") };
   try {
     const { from, to, amountCents, note } = parsed.data;
     const res = await bookTransfer(user.id, from as AccountKind, to as AccountKind, amountCents, note);
     refresh();
-    return { success: `Gebucht: ${res.from} → ${res.to}` };
+    return { success: t("Gebucht: {from} → {to}", { from: res.from, to: res.to }) };
   } catch (e) {
-    return { error: e instanceof Error ? e.message : "Umbuchung fehlgeschlagen." };
+    return { error: e instanceof Error ? t(e.message) : t("Umbuchung fehlgeschlagen.") };
   }
 }

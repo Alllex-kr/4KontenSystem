@@ -10,22 +10,24 @@ import { requireFeature } from "@/lib/access";
 import { ACCOUNT_KINDS, CATEGORIES } from "@/lib/constants";
 import { ACCENTS, APPEARANCE_COOKIE, FONT_SCALES, MOTIONS, THEMES, normalizeAppearance } from "@/lib/appearance";
 import { layoutSchema } from "@/lib/dashboard";
-import { parseEuroToCents } from "@/lib/format";
+import { parseEuroToCents, intlLocale } from "@/lib/format";
 import { ensureUserSetup } from "@/lib/data";
 import type { ActionState } from "./types";
+import { getT } from "@/lib/i18n/server";
+import { msg } from "@/lib/i18n/translate";
 
-const euro = (msg = "Bitte einen gültigen Betrag eingeben (z. B. 12,50).") =>
+const euro = (message: string = msg("Bitte einen gültigen Betrag eingeben (z. B. 12,50).")) =>
   z.string().transform((v, ctx) => {
     const c = parseEuroToCents(v);
     if (c === null) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: msg });
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message });
       return z.NEVER;
     }
     return c;
   });
 
 function firstError(e: z.ZodError) {
-  return e.issues[0]?.message ?? "Ungültige Eingabe.";
+  return e.issues[0]?.message ?? msg("Ungültige Eingabe.");
 }
 
 function refresh() {
@@ -34,38 +36,40 @@ function refresh() {
 
 async function ownAccount(userId: string, accountId: string) {
   const acc = await prisma.account.findFirst({ where: { id: accountId, userId } });
-  if (!acc) throw new Error("Konto nicht gefunden.");
+  if (!acc) throw new Error(msg("Konto nicht gefunden."));
   return acc;
 }
 
 // ---------- Kontostände ----------
 
 export async function updateBalance(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const t = await getT();
   const user = await requireUser();
   const parsed = z.object({ accountId: z.string(), balance: euro() }).safeParse(Object.fromEntries(formData));
-  if (!parsed.success) return { error: firstError(parsed.error) };
+  if (!parsed.success) return { error: t(firstError(parsed.error)) };
   await ownAccount(user.id, parsed.data.accountId);
   await prisma.account.update({
     where: { id: parsed.data.accountId },
     data: { balanceCents: parsed.data.balance, balanceUpdatedAt: new Date() },
   });
   refresh();
-  return { success: "Kontostand gespeichert." };
+  return { success: t("Kontostand gespeichert.") };
 }
 
 export async function transfer(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const t = await getT();
   const user = await requireUser();
   const parsed = z
     .object({ fromId: z.string(), toId: z.string(), amount: euro(), note: z.string().max(100).optional() })
     .safeParse(Object.fromEntries(formData));
-  if (!parsed.success) return { error: firstError(parsed.error) };
+  if (!parsed.success) return { error: t(firstError(parsed.error)) };
   const { fromId, toId, amount, note } = parsed.data;
-  if (fromId === toId) return { error: "Bitte zwei verschiedene Konten wählen." };
-  if (amount <= 0) return { error: "Der Betrag muss größer als 0 sein." };
+  if (fromId === toId) return { error: t("Bitte zwei verschiedene Konten wählen.") };
+  if (amount <= 0) return { error: t("Der Betrag muss größer als 0 sein.") };
   const [from, to] = await Promise.all([ownAccount(user.id, fromId), ownAccount(user.id, toId)]);
   const group = randomUUID();
   const date = new Date();
-  const description = note?.trim() || `Umbuchung ${from.name} → ${to.name}`;
+  const description = note?.trim() || t("Umbuchung {from} → {to}", { from: from.name, to: to.name });
   await prisma.$transaction([
     prisma.transaction.create({ data: { userId: user.id, accountId: from.id, amountCents: -amount, date, description, category: "Umbuchung", transferGroup: group } }),
     prisma.transaction.create({ data: { userId: user.id, accountId: to.id, amountCents: amount, date, description, category: "Umbuchung", transferGroup: group } }),
@@ -73,40 +77,41 @@ export async function transfer(_prev: ActionState, formData: FormData): Promise<
     prisma.account.update({ where: { id: to.id }, data: { balanceCents: { increment: amount } } }),
   ]);
   refresh();
-  return { success: "Umbuchung durchgeführt." };
+  return { success: t("Umbuchung durchgeführt.") };
 }
 
 // ---------- Wiederkehrende Zahlungen ----------
 
 const paymentSchema = z.object({
   id: z.string().optional(),
-  name: z.string().trim().min(1, "Bitte eine Bezeichnung angeben.").max(80),
+  name: z.string().trim().min(1, msg("Bitte eine Bezeichnung angeben.")).max(80),
   amount: euro(),
   direction: z.enum(["IN", "OUT"]),
   accountId: z.string().min(1),
-  dayOfMonth: z.coerce.number().int().min(1, "Tag 1–31").max(31, "Tag 1–31"),
+  dayOfMonth: z.coerce.number().int().min(1, msg("Tag 1–31")).max(31, msg("Tag 1–31")),
   intervalMonths: z.coerce.number().int().min(1).max(24),
   startMonth: z.coerce.number().int().min(1).max(12),
   category: z.enum(CATEGORIES),
 });
 
 export async function savePayment(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const t = await getT();
   const user = await requireUser();
   const raw = Object.fromEntries(formData);
   const parsed = paymentSchema.safeParse({ ...raw, id: raw.id || undefined });
-  if (!parsed.success) return { error: firstError(parsed.error) };
+  if (!parsed.success) return { error: t(firstError(parsed.error)) };
   const { id, amount, ...rest } = parsed.data;
-  if (amount <= 0) return { error: "Der Betrag muss größer als 0 sein." };
+  if (amount <= 0) return { error: t("Der Betrag muss größer als 0 sein.") };
   await ownAccount(user.id, rest.accountId);
   const data = { ...rest, amountCents: amount, userId: user.id };
   if (id) {
     const res = await prisma.recurringPayment.updateMany({ where: { id, userId: user.id }, data });
-    if (res.count === 0) return { error: "Zahlung nicht gefunden." };
+    if (res.count === 0) return { error: t("Zahlung nicht gefunden.") };
   } else {
     await prisma.recurringPayment.create({ data });
   }
   refresh();
-  return { success: id ? "Zahlung aktualisiert." : "Zahlung hinzugefügt." };
+  return { success: id ? t("Zahlung aktualisiert.") : t("Zahlung hinzugefügt.") };
 }
 
 export async function togglePayment(formData: FormData) {
@@ -149,9 +154,10 @@ export async function deletePaymentUndoable(id: string): Promise<PaymentSnapshot
 }
 
 export async function restorePayment(snapshot: PaymentSnapshot): Promise<ActionState> {
+  const t = await getT();
   const user = await requireUser();
   const s = paymentSnap.safeParse(snapshot);
-  if (!s.success) return { error: "Wiederherstellen nicht möglich." };
+  if (!s.success) return { error: t("Wiederherstellen nicht möglich.") };
   await ownAccount(user.id, s.data.accountId);
   await prisma.recurringPayment.create({ data: { ...s.data, userId: user.id } });
   refresh();
@@ -164,18 +170,19 @@ const txSchema = z.object({
   accountId: z.string().min(1),
   amount: euro(),
   direction: z.enum(["IN", "OUT"]),
-  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Bitte ein Datum wählen."),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, msg("Bitte ein Datum wählen.")),
   description: z.string().trim().max(100).optional(),
   category: z.enum(CATEGORIES),
 });
 
 export async function addTransaction(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const t = await getT();
   const user = await requireUser();
   const parsed = txSchema.safeParse(Object.fromEntries(formData));
-  if (!parsed.success) return { error: firstError(parsed.error) };
+  if (!parsed.success) return { error: t(firstError(parsed.error)) };
   const { accountId, amount, direction, date, category } = parsed.data;
   const description = parsed.data.description || category;
-  if (amount <= 0) return { error: "Der Betrag muss größer als 0 sein." };
+  if (amount <= 0) return { error: t("Der Betrag muss größer als 0 sein.") };
   const account = await ownAccount(user.id, accountId);
   const signed = direction === "IN" ? amount : -amount;
   // Excel-Makro "KontostandEingabeAbschließen": Liegt die Buchung vor dem letzten Abgleich mit der Bank,
@@ -191,8 +198,8 @@ export async function addTransaction(_prev: ActionState, formData: FormData): Pr
   ]);
   refresh();
   return affectsBalance
-    ? { success: "Buchung gespeichert." }
-    : { success: `Gebucht. Der Kontostand bleibt unverändert, weil die Buchung vor deinem letzten Abgleich am ${abgleich!.toLocaleDateString("de-DE")} liegt und dort schon enthalten ist.` };
+    ? { success: t("Buchung gespeichert.") }
+    : { success: t("Gebucht. Der Kontostand bleibt unverändert, weil die Buchung vor deinem letzten Abgleich am {v0} liegt und dort schon enthalten ist.", { v0: abgleich!.toLocaleDateString(intlLocale()) }) };
 }
 
 export async function deleteTransaction(formData: FormData) {
@@ -248,9 +255,10 @@ export async function deleteTransactionUndoable(id: string): Promise<Transaction
 }
 
 export async function restoreTransactions(snapshot: TransactionSnapshot[]): Promise<ActionState> {
+  const t = await getT();
   const user = await requireUser();
   const s = z.array(txSnap).max(2).safeParse(snapshot);
-  if (!s.success || !s.data.length) return { error: "Wiederherstellen nicht möglich." };
+  if (!s.success || !s.data.length) return { error: t("Wiederherstellen nicht möglich.") };
   for (const t of s.data) await ownAccount(user.id, t.accountId);
   await prisma.$transaction([
     ...s.data.map((t) => prisma.transaction.create({ data: { ...t, date: new Date(t.date), userId: user.id } })),
@@ -263,34 +271,36 @@ export async function restoreTransactions(snapshot: TransactionSnapshot[]): Prom
 // ---------- Sparziele ----------
 
 const goalSchema = z.object({
-  name: z.string().trim().min(1, "Bitte einen Namen angeben.").max(60),
+  name: z.string().trim().min(1, msg("Bitte einen Namen angeben.")).max(60),
   target: euro(),
   saved: euro().optional().or(z.literal("").transform(() => 0)),
   deadline: z.string().optional(),
 });
 
 export async function addGoal(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const t = await getT();
   const user = await requireFeature("goals.use");
   const parsed = goalSchema.safeParse(Object.fromEntries(formData));
-  if (!parsed.success) return { error: firstError(parsed.error) };
+  if (!parsed.success) return { error: t(firstError(parsed.error)) };
   const { name, target, saved, deadline } = parsed.data;
-  if (target <= 0) return { error: "Das Ziel muss größer als 0 sein." };
+  if (target <= 0) return { error: t("Das Ziel muss größer als 0 sein.") };
   await prisma.savingsGoal.create({
     data: { userId: user.id, name, targetCents: target, savedCents: saved ?? 0, deadline: deadline ? new Date(`${deadline}T12:00:00`) : null },
   });
   refresh();
-  return { success: "Sparziel angelegt." };
+  return { success: t("Sparziel angelegt.") };
 }
 
 export async function depositGoal(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const t = await getT();
   const user = await requireFeature("goals.use");
   const parsed = z.object({ id: z.string(), amount: euro() }).safeParse(Object.fromEntries(formData));
-  if (!parsed.success) return { error: firstError(parsed.error) };
+  if (!parsed.success) return { error: t(firstError(parsed.error)) };
   const res = await prisma.savingsGoal.updateMany({
     where: { id: parsed.data.id, userId: user.id },
     data: { savedCents: { increment: parsed.data.amount } },
   });
-  if (res.count === 0) return { error: "Sparziel nicht gefunden." };
+  if (res.count === 0) return { error: t("Sparziel nicht gefunden.") };
   refresh();
   return { success: "Gespeichert." };
 }
@@ -321,9 +331,10 @@ export async function deleteGoalUndoable(id: string): Promise<GoalSnapshot | nul
 }
 
 export async function restoreGoal(snapshot: GoalSnapshot): Promise<ActionState> {
+  const t = await getT();
   const user = await requireFeature("goals.use");
   const s = goalSnap.safeParse(snapshot);
-  if (!s.success) return { error: "Wiederherstellen nicht möglich." };
+  if (!s.success) return { error: t("Wiederherstellen nicht möglich.") };
   await prisma.savingsGoal.create({
     data: { ...s.data, userId: user.id, deadline: s.data.deadline ? new Date(s.data.deadline) : null, createdAt: new Date(s.data.createdAt) },
   });
@@ -334,21 +345,22 @@ export async function restoreGoal(snapshot: GoalSnapshot): Promise<ActionState> 
 // ---------- Einstellungen ----------
 
 export async function saveSettings(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const t = await getT();
   const user = await requireUser();
   const parsed = z
     .object({
       minBuffer: euro(),
-      emergencyMonths: z.coerce.number().int().min(1, "1–12 Monate").max(12, "1–12 Monate"),
-      savingsRatePct: z.coerce.number().int().min(0).max(80, "Sparquote max. 80 %"),
-      emergencyRatePct: z.coerce.number().int().min(0).max(80, "Notgroschen-Quote max. 80 %"),
-      transferDay: z.coerce.number().int().min(1).max(28, "Tag 1–28"),
+      emergencyMonths: z.coerce.number().int().min(1, msg("1–12 Monate")).max(12, msg("1–12 Monate")),
+      savingsRatePct: z.coerce.number().int().min(0).max(80, msg("Sparquote max. 80 %")),
+      emergencyRatePct: z.coerce.number().int().min(0).max(80, msg("Notgroschen-Quote max. 80 %")),
+      transferDay: z.coerce.number().int().min(1).max(28, msg("Tag 1–28")),
     })
     .safeParse(Object.fromEntries(formData));
-  if (!parsed.success) return { error: firstError(parsed.error) };
+  if (!parsed.success) return { error: t(firstError(parsed.error)) };
   const { minBuffer, ...rest } = parsed.data;
   await prisma.settings.update({ where: { userId: user.id }, data: { ...rest, minBufferCents: minBuffer } });
   refresh();
-  return { success: "Einstellungen gespeichert." };
+  return { success: t("Einstellungen gespeichert.") };
 }
 
 // ---------- Beispieldaten ----------
@@ -478,9 +490,10 @@ const appearanceSchema = z.object({
 
 /** Speichert einzelne Darstellungs-Optionen (wird live beim Anklicken aufgerufen). */
 export async function saveAppearance(input: z.input<typeof appearanceSchema>): Promise<ActionState> {
+  const t = await getT();
   const user = await requireUser();
   const parsed = appearanceSchema.safeParse(input);
-  if (!parsed.success) return { error: "Ungültige Einstellung." };
+  if (!parsed.success) return { error: t("Ungültige Einstellung.") };
   await ensureUserSetup(user.id);
   const saved = await prisma.settings.update({ where: { userId: user.id }, data: parsed.data });
   await rememberAppearance(saved);
@@ -489,28 +502,30 @@ export async function saveAppearance(input: z.input<typeof appearanceSchema>): P
 }
 
 export async function saveDashboardLayout(layout: unknown): Promise<ActionState> {
+  const t = await getT();
   const user = await requireFeature("customize.use");
   const parsed = layoutSchema.safeParse(layout);
-  if (!parsed.success) return { error: "Layout konnte nicht gespeichert werden." };
+  if (!parsed.success) return { error: t("Layout konnte nicht gespeichert werden.") };
   await ensureUserSetup(user.id);
   await prisma.settings.update({ where: { userId: user.id }, data: { dashboardLayout: JSON.stringify(parsed.data) } });
   revalidatePath("/dashboard");
-  return { success: "Dashboard gespeichert." };
+  return { success: t("Dashboard gespeichert.") };
 }
 
 export async function updateAccountAppearance(input: { accountId: string; name?: string; color?: string | null }): Promise<ActionState> {
+  const t = await getT();
   const user = await requireFeature("customize.use");
   const parsed = z
     .object({
       accountId: z.string(),
-      name: z.string().trim().min(1, "Name darf nicht leer sein.").max(40).optional(),
+      name: z.string().trim().min(1, msg("Name darf nicht leer sein.")).max(40).optional(),
       color: z.string().regex(/^#[0-9a-fA-F]{6}$/).nullable().optional(),
     })
     .safeParse(input);
-  if (!parsed.success) return { error: firstError(parsed.error) };
+  if (!parsed.success) return { error: t(firstError(parsed.error)) };
   await ownAccount(user.id, parsed.data.accountId);
   const { accountId, ...data } = parsed.data;
   await prisma.account.update({ where: { id: accountId }, data });
   refresh();
-  return { success: "Konto aktualisiert." };
+  return { success: t("Konto aktualisiert.") };
 }

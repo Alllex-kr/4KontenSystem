@@ -6,13 +6,15 @@ import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { requireFeature } from "@/lib/access";
 import { CATEGORIES } from "@/lib/constants";
+import { getT } from "@/lib/i18n/server";
+import { msg } from "@/lib/i18n/translate";
 
 const MAX_ROWS = 3000;
 const hashSchema = z.string().regex(/^[a-z0-9]{4,20}$/);
 
 async function ownAccount(userId: string, accountId: string) {
   const acc = await prisma.account.findFirst({ where: { id: accountId, userId } });
-  if (!acc) throw new Error("Konto nicht gefunden.");
+  if (!acc) throw new Error(msg("Konto nicht gefunden."));
   return acc;
 }
 
@@ -46,7 +48,7 @@ const importSchema = z.object({
       z.object({
         hash: hashSchema,
         date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-        amountCents: z.number().int().refine((v) => v !== 0 && Math.abs(v) < 100_000_000, "Ungültiger Betrag"),
+        amountCents: z.number().int().refine((v) => v !== 0 && Math.abs(v) < 100_000_000, msg("Ungültiger Betrag")),
         description: z.string().trim().min(1).max(100),
         category: z.enum(CATEGORIES),
         /** Kategorie wurde von Hand geändert (user) oder von Claude vorgeschlagen (ai) → als Regel merken */
@@ -54,8 +56,8 @@ const importSchema = z.object({
         learnSource: z.enum(["user", "ai"]).optional(),
       }),
     )
-    .min(1, "Keine Umsätze ausgewählt.")
-    .max(MAX_ROWS, `Maximal ${MAX_ROWS} Umsätze pro Import.`),
+    .min(1, msg("Keine Umsätze ausgewählt."))
+    .max(MAX_ROWS, msg("Zu viele Umsätze auf einmal. Bitte höchstens 3000 pro Import.")),
   balanceMode: z.enum(["keep", "add", "set"]),
   balanceCents: z.number().int().optional(),
 });
@@ -63,11 +65,12 @@ const importSchema = z.object({
 export type ImportResult = { error?: string; imported?: number; skipped?: number; learned?: number };
 
 export async function importTransactions(input: z.input<typeof importSchema>): Promise<ImportResult> {
+  const t = await getT();
   const user = await requireFeature("import.csv");
   const parsed = importSchema.safeParse(input);
-  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ungültige Daten." };
+  if (!parsed.success) return { error: t(parsed.error.issues[0]?.message ?? "Ungültige Daten.") };
   const { accountId, rows, balanceMode, balanceCents } = parsed.data;
-  if (balanceMode === "set" && balanceCents === undefined) return { error: "Bitte den aktuellen Kontostand angeben." };
+  if (balanceMode === "set" && balanceCents === undefined) return { error: t("Bitte den aktuellen Kontostand angeben.") };
   await ownAccount(user.id, accountId);
 
   const dupes = await existingHashes(user.id, accountId, rows.map((r) => r.hash));

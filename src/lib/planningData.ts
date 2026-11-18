@@ -4,6 +4,7 @@ import { ACCOUNT_KINDS, type AccountKind } from "./constants";
 import { forecastFixkosten } from "./finance";
 import { formatCents, formatDate } from "./format";
 import { ausgleich, buildTodos, ordersDiff, parseOrders, rebalance, reserveSummary } from "./planning";
+import { getT } from "./i18n/server";
 
 /** Lädt alles für Rücklagen, Ausgleich, notwendige Überweisungen und die Checkliste. */
 export async function loadPlanning(userId: string, overview?: Awaited<ReturnType<typeof loadOverview>>) {
@@ -55,6 +56,7 @@ export async function loadPlanning(userId: string, overview?: Awaited<ReturnType
     names,
     fmt: formatCents,
     fmtDate: formatDate,
+    t: await getT(),
   });
 
   return {

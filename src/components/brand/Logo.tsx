@@ -1,4 +1,7 @@
+"use client";
+
 import { BRAND } from "@/lib/brand";
+import { useT } from "@/lib/i18n/client";
 
 // Ein Blatt (oben links): Dreiviertelkreis mit Spitze zur Mitte.
 const LEAF = "M30 30H17A13 13 0 0 1 4 17A13 13 0 0 1 17 4A13 13 0 0 1 30 17Z";
@@ -26,6 +29,7 @@ export function LogoMark({ size = 32, mono = false, className = "" }: { size?: n
 
 /** Bildmarke + Wortmarke "vierklee". */
 export function Logo({ size = 32, className = "", tagline = false }: { size?: number; className?: string; tagline?: boolean }) {
+  const t = useT();
   return (
     <span className={`leaf-spin inline-flex items-center gap-2.5 ${className}`}>
       <LogoMark size={size} />
@@ -34,7 +38,7 @@ export function Logo({ size = 32, className = "", tagline = false }: { size?: nu
           <span className="text-fg">vier</span>
           <span style={{ color: "var(--brand-green)" }}>klee</span>
         </span>
-        {tagline && <span className="mt-1 text-[11px] font-semibold text-muted">{BRAND.tagline}</span>}
+        {tagline && <span className="mt-1 text-[11px] font-semibold text-muted">{t(BRAND.tagline)}</span>}
       </span>
     </span>
   );

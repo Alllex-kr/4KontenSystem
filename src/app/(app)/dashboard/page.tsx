@@ -1,17 +1,22 @@
 import { requireUser } from "@/lib/auth";
 import { getAccess } from "@/lib/access";
+import { getT } from "@/lib/i18n/server";
 import { prisma } from "@/lib/db";
 import { loadAccountsLite, loadOverview } from "@/lib/data";
 import { ACCOUNT_KINDS, CATEGORY_COLORS, type AccountKind } from "@/lib/constants";
 import { forecastFixkosten, projectBalances } from "@/lib/finance";
-import { formatDate } from "@/lib/format";
+import { formatDate, intlLocale } from "@/lib/format";
 import { parseLayout } from "@/lib/dashboard";
 import { DashboardClient, type DashboardData } from "./DashboardClient";
 import { loadPlanning } from "@/lib/planningData";
 
-export const metadata = { title: "Dashboard" };
+export async function generateMetadata() {
+  const t = await getT();
+  return { title: t("Dashboard") };
+}
 
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ willkommen?: string }> }) {
+  const t = await getT();
   const user = await requireUser();
   const { willkommen } = await searchParams;
   const overview = await loadOverview(user.id);
@@ -55,7 +60,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const cashflow = months.map((m) => {
     const inMonth = txs.filter((t) => !t.transferGroup && t.date.getFullYear() === m.getFullYear() && t.date.getMonth() === m.getMonth());
     return {
-      label: m.toLocaleDateString("de-DE", { month: "short" }),
+      label: m.toLocaleDateString(intlLocale(), { month: "short" }),
       Ausgaben: -inMonth.filter((t) => t.amountCents < 0).reduce((s, t) => s + t.amountCents, 0) / 100,
       Einnahmen: inMonth.filter((t) => t.amountCents > 0).reduce((s, t) => s + t.amountCents, 0) / 100,
     };
@@ -106,7 +111,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     forecast: forecast.points.map((p) => ({ label: p.label, balance: p.balanceCents / 100 })),
     projection: projection as unknown as Record<string, number | string>[],
     cashflow,
-    categories: [...byCat.entries()].sort((a, b) => b[1] - a[1]).map(([name, v], i) => ({ name, value: v / 100, color: CATEGORY_COLORS[i % CATEGORY_COLORS.length] })),
+    categories: [...byCat.entries()].sort((a, b) => b[1] - a[1]).map(([name, v], i) => ({ name: t(name), value: v / 100, color: CATEGORY_COLORS[i % CATEGORY_COLORS.length] })),
     goals: goals.map((g) => ({ id: g.id, name: g.name, savedCents: g.savedCents, targetCents: g.targetCents })),
     recent: txs.slice(0, 8).map((t) => ({
       id: t.id,

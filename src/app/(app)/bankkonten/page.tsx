@@ -6,10 +6,15 @@ import { loadAccountsLite } from "@/lib/data";
 import { activeProviderInfo } from "@/lib/banking";
 import { PageHeader } from "@/components/ui";
 import { BankClient } from "./BankClient";
+import { getT } from "@/lib/i18n/server";
 
-export const metadata = { title: "Bankkonten" };
+export async function generateMetadata() {
+  const t = await getT();
+  return { title: t("Bankkonten") };
+}
 
 export default async function BankkontenPage() {
+  const t = await getT();
   const user = await requireUser();
   const access = await getAccess(user.id);
   if (!access.permissions.has("bank.connect")) return <FeatureLocked feature="bank.connect" planName={access.plan?.name} />;
@@ -26,8 +31,8 @@ export default async function BankkontenPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Bankkonten verbinden"
-        subtitle="Optional: Kontostände und Umsätze direkt von deiner Bank holen, statt CSV-Dateien hochzuladen."
+        title={t("Bankkonten verbinden")}
+        subtitle={t("Optional: Kontostände und Umsätze direkt von deiner Bank holen, statt CSV-Dateien hochzuladen.")}
       />
       <BankClient
         provider={info}

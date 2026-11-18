@@ -1,24 +1,25 @@
 import { z } from "zod";
+import { msg } from "./i18n/translate";
 
 export const WIDGET_SIZES = ["sm", "md", "lg", "full"] as const;
 export type WidgetSize = (typeof WIDGET_SIZES)[number];
 
 export const WIDGETS = {
-  todos: { title: "Checkliste", description: "Was jetzt zu tun ist: Ausgleich, Daueraufträge, Rücklagen" },
-  ausgleich: { title: "Ausgleich & Überweisungen", description: "Puffer prüfen, Zusatz-Zahlung, notwendige Umbuchungen" },
-  kpis: { title: "Kennzahlen", description: "Vermögen, Einkommen, Freizeit übrig, Sparquote" },
-  accounts: { title: "Kontenübersicht", description: "Die vier Konten mit Stand und Monatsbetrag" },
-  freizeit: { title: "Freizeit-Budget", description: "Was du diesen Monat noch ausgeben darfst" },
-  quickadd: { title: "Schnellbuchung", description: "Ausgabe direkt vom Dashboard eintragen" },
-  allocation: { title: "Monatliche Verteilung", description: "Wie dein Einkommen aufgeteilt wird" },
-  forecast: { title: "Saldo-Verlauf Fixkostenkonto", description: "Prognose für 60 Tage mit Mindestpuffer" },
-  projection: { title: "Vermögensprognose", description: "Sparen und Notgroschen in 12 Monaten" },
-  balances: { title: "Aufteilung deines Geldes", description: "Aktuelle Kontostände im Vergleich" },
-  cashflow: { title: "Einnahmen & Ausgaben", description: "Die letzten 6 Monate" },
-  categories: { title: "Ausgaben nach Kategorie", description: "Dieser Monat" },
-  transfers: { title: "Daueraufträge", description: "Empfohlene Umbuchungen pro Monat" },
-  goals: { title: "Sparziele", description: "Fortschritt deiner Ziele" },
-  recent: { title: "Letzte Buchungen", description: "Die neuesten Einträge" },
+  todos: { title: msg("Checkliste"), description: msg("Was jetzt zu tun ist: Ausgleich, Daueraufträge, Rücklagen") },
+  ausgleich: { title: msg("Ausgleich & Überweisungen"), description: msg("Puffer prüfen, Zusatz-Zahlung, notwendige Umbuchungen") },
+  kpis: { title: msg("Kennzahlen"), description: msg("Vermögen, Einkommen, Freizeit übrig, Sparquote") },
+  accounts: { title: msg("Kontenübersicht"), description: msg("Die vier Konten mit Stand und Monatsbetrag") },
+  freizeit: { title: msg("Freizeit-Budget"), description: msg("Was du diesen Monat noch ausgeben darfst") },
+  quickadd: { title: msg("Schnellbuchung"), description: msg("Ausgabe direkt vom Dashboard eintragen") },
+  allocation: { title: msg("Monatliche Verteilung"), description: msg("Wie dein Einkommen aufgeteilt wird") },
+  forecast: { title: msg("Saldo-Verlauf Fixkostenkonto"), description: msg("Prognose für 60 Tage mit Mindestpuffer") },
+  projection: { title: msg("Vermögensprognose"), description: msg("Sparen und Notgroschen in 12 Monaten") },
+  balances: { title: msg("Aufteilung deines Geldes"), description: msg("Aktuelle Kontostände im Vergleich") },
+  cashflow: { title: msg("Einnahmen & Ausgaben"), description: msg("Die letzten 6 Monate") },
+  categories: { title: msg("Ausgaben nach Kategorie"), description: msg("Dieser Monat") },
+  transfers: { title: msg("Daueraufträge"), description: msg("Empfohlene Umbuchungen pro Monat") },
+  goals: { title: msg("Sparziele"), description: msg("Fortschritt deiner Ziele") },
+  recent: { title: msg("Letzte Buchungen"), description: msg("Die neuesten Einträge") },
 } as const;
 export type WidgetId = keyof typeof WIDGETS;
 export const WIDGET_IDS = Object.keys(WIDGETS) as WidgetId[];
@@ -80,9 +81,9 @@ const presets: Record<string, [WidgetId, WidgetSize, boolean][]> = {
 };
 
 export const PRESETS = {
-  standard: { label: "Standard", description: "Alles Wichtige auf einen Blick" },
-  minimal: { label: "Minimal", description: "Freizeit-Budget, Schnellbuchung, Konten" },
-  analyse: { label: "Analyse", description: "Diagramme und Prognosen im Fokus" },
+  standard: { label: msg("Standard"), description: msg("Alles Wichtige auf einen Blick") },
+  minimal: { label: msg("Minimal"), description: msg("Freizeit-Budget, Schnellbuchung, Konten") },
+  analyse: { label: msg("Analyse"), description: msg("Diagramme und Prognosen im Fokus") },
 } as const;
 export type PresetId = keyof typeof PRESETS;
 

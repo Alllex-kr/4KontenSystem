@@ -3,8 +3,12 @@ import { requirePermission } from "@/lib/access";
 import { prisma } from "@/lib/db";
 import { DEMO_ACCOUNTS } from "@/lib/banking/demo";
 import { DemoBankClient } from "./DemoBankClient";
+import { getT } from "@/lib/i18n/server";
 
-export const metadata = { title: "Demo-Bank" };
+export async function generateMetadata() {
+  const t = await getT();
+  return { title: t("Demo-Bank") };
+}
 
 export default async function DemoBankPage({ searchParams }: { searchParams: Promise<{ c?: string }> }) {
   const user = await requirePermission("bank.connect");
