@@ -1,0 +1,14 @@
+node_modules
+.next
+.next-*
+next-env.d.ts
+*.tsbuildinfo
+.env
+prisma/*.db
+prisma/*.db-journal
+
+# Lokale Umgebungsdateien (nur .env.example gehört ins Repo)
+.env*.local
+.env.production
+# Zugangsdaten des lokalen Testkontos
+docs/test-login.md

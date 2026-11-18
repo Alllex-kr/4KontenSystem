@@ -1,0 +1,22 @@
+Umsatzanzeige;Datei erstellt am: 18.11.2026 09:12
+
+IBAN;DE00 0000 0000 0000 0000 00
+Kontoname;Girokonto
+Bank;ING
+Kunde;Max Beispiel
+Zeitraum;01.11.2026 - 18.11.2026
+Saldo;1.234,56;EUR
+
+Sortierung;Datum absteigend
+
+In der CSV-Datei finden Sie alle bereits gebuchten Umsätze.
+
+Buchung;Wertstellungsdatum;Auftraggeber/Empfänger;Buchungstext;Verwendungszweck;Saldo;Währung;Betrag;Währung
+18.11.2026;18.11.2026;EDEKA Center Beispielstadt;Lastschrift;EDEKA SAGT DANKE;1.234,56;EUR;-32,10;EUR
+16.11.2026;16.11.2026;Spotify AB;Lastschrift;Spotify Premium;1.266,66;EUR;-10,99;EUR
+15.11.2026;15.11.2026;Zalando SE;Lastschrift;Bestellung 10293847;1.277,65;EUR;-49,95;EUR
+12.11.2026;12.11.2026;Max Beispiel;Gutschrift;Umbuchung vom Tagesgeld;1.327,60;EUR;200,00;EUR
+11.11.2026;11.11.2026;Starbucks Coffee;Lastschrift;Kartenzahlung;1.127,60;EUR;-4,80;EUR
+11.11.2026;11.11.2026;Starbucks Coffee;Lastschrift;Kartenzahlung;1.132,40;EUR;-4,80;EUR
+05.11.2026;05.11.2026;Trade Republic Bank;Lastschrift;Sparplan ETF;1.137,20;EUR;-50,00;EUR
+01.11.2026;01.11.2026;Beispiel Hausverwaltung;Dauerauftrag;Miete 11/2026;1.187,20;EUR;-380,00;EUR

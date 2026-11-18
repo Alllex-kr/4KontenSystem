@@ -1,0 +1,477 @@
+// Datenmodell für das Vier-Konten-System.
+// Alle Geldbeträge werden als Ganzzahl in Cent gespeichert (keine Rundungsfehler).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String             @id @default(cuid())
+  email        String             @unique
+  name         String
+  /// Leer bei Konten, die sich nur mit Google anmelden
+  passwordHash String?
+  createdAt    DateTime           @default(now())
+  sessions     Session[]
+  accounts     Account[]
+  payments     RecurringPayment[]
+  transactions Transaction[]
+  goals        SavingsGoal[]
+  settings     Settings?
+  importRules  ImportRule[]
+  bankConnections BankConnection[]
+  reserveItems ReserveItem[]
+  aiUsage      AiUsage[]
+  providerIdentities ProviderIdentity[]
+
+  // --- Zugriff & Abo ---
+  /// Abo (Plan). Leer = Standard-Abo
+  planId         String?
+  plan           Plan?               @relation(fields: [planId], references: [id], onDelete: SetNull)
+  /// Zuletzt aktiv (höchstens minütlich aktualisiert)
+  lastSeenAt     DateTime?
+  /// Gesperrt: kein Login, bestehende Sitzungen gelten nicht mehr
+  disabledAt     DateTime?
+  permissionSets UserPermissionSet[]
+  setGroups      UserSetGroup[]
+  groups         UserGroupMember[]
+  oauthAccounts  OAuthAccount[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+/// Eines der vier Konten. kind: FIXKOSTEN | SPAREN | NOTGROSCHEN | FREIZEIT
+model Account {
+  id               String             @id @default(cuid())
+  userId           String
+  user             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind             String
+  name             String
+  /// Eigene Farbe (Hex). Leer = Standardfarbe des Kontotyps.
+  color            String?
+  balanceCents     Int                @default(0)
+  balanceUpdatedAt DateTime?
+  payments         RecurringPayment[]
+  transactions     Transaction[]
+  bankLinks        BankAccountLink[]
+
+  @@unique([userId, kind])
+}
+
+/// Wiederkehrende Zahlung (monatlich oder alle n Monate), z. B. Miete, Semesterbeitrag, Gehalt.
+model RecurringPayment {
+  id             String  @id @default(cuid())
+  userId         String
+  user           User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accountId      String
+  account        Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  name           String
+  amountCents    Int
+  /// IN = Einnahme, OUT = Ausgabe
+  direction      String
+  dayOfMonth     Int
+  intervalMonths Int     @default(1)
+  startMonth     Int     @default(1)
+  category       String
+  active         Boolean @default(true)
+
+  @@index([userId])
+}
+
+/// Tatsächliche Buchung. amountCents ist vorzeichenbehaftet (+ Eingang, - Ausgang).
+model Transaction {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accountId     String
+  account       Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  amountCents   Int
+  date          DateTime
+  description   String
+  category      String
+  transferGroup String?
+  /// false = Buchung lag vor dem letzten Kontoabgleich, der Kontostand wurde nicht verändert
+  affectsBalance Boolean @default(true)
+  /// Fingerabdruck aus dem CSV-Import, um Duplikate zu erkennen
+  importHash    String?
+  createdAt     DateTime @default(now())
+
+  @@index([userId, date])
+  @@index([userId, accountId, importHash])
+}
+
+model SavingsGoal {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  targetCents Int
+  savedCents  Int       @default(0)
+  deadline    DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([userId])
+}
+
+model Settings {
+  userId           String @id
+  user             User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Mindestpuffer, der auf dem Fixkostenkonto nie unterschritten werden soll
+  minBufferCents   Int    @default(10000)
+  /// Notgroschen-Ziel in Monaten Fixkosten
+  emergencyMonths  Int    @default(3)
+  /// Anteil des Einkommens für das Sparkonto
+  savingsRatePct   Int    @default(10)
+  /// Anteil des Einkommens für den Notgroschen, solange das Ziel nicht erreicht ist
+  emergencyRatePct Int    @default(10)
+  /// Tag, an dem die Daueraufträge auf die anderen Konten laufen
+  transferDay      Int    @default(1)
+
+  // --- Darstellung ---
+  /// system | light | dark
+  theme            String  @default("system")
+  /// klee | indigo | violet | emerald | sky | rose | amber
+  accent           String  @default("klee")
+  /// normal | large
+  fontScale        String  @default("normal")
+  /// Beträge verbergen (z. B. unterwegs)
+  hideAmounts      Boolean @default(false)
+  /// Animationen: system (wie Gerät) | on | off
+  motion           String  @default("system")
+  /// JSON: [{ id, size, visible }] in Anzeigereihenfolge
+  dashboardLayout  String?
+
+  // --- Rücklagen (Excel-Blatt "Reserve") ---
+  /// Festgesetzter Monatsbetrag für Rücklagen (Dauerauftrag)
+  reserveMonthlyCents Int     @default(0)
+  /// Warnung, wenn der festgesetzte Betrag mehr als X % unter der Prognose liegt
+  reserveTolerancePct Int     @default(15)
+  /// Konto, auf dem die Rücklagen liegen: SPAREN | NOTGROSCHEN
+  reserveAccountKind  String  @default("SPAREN")
+
+  // --- Daueraufträge (Excel: "Daueraufträge anpassen erledigt", "gültig ab") ---
+  /// JSON { SPAREN, NOTGROSCHEN, FREIZEIT } in Cent: zuletzt bei der Bank eingerichtete Daueraufträge
+  confirmedOrders     String?
+  ordersValidFrom     DateTime?
+
+  // --- KI (Claude) ---
+  /// Opt-in: Umsätze ohne passende Regel von Claude kategorisieren lassen
+  aiCategorization    Boolean   @default(false)
+  /// Höchstens so viele Umsätze pro Monat per KI kategorisieren (Kostenschutz)
+  aiMonthlyLimit      Int       @default(1000)
+}
+
+/// Gelernte Kategorie-Zuordnung aus dem CSV-Import (z. B. "rewe" -> Lebensmittel)
+model ImportRule {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pattern   String
+  category  String
+  /// user = von dir korrigiert, ai = von Claude vorgeschlagen und gemerkt
+  source    String   @default("user")
+  createdAt DateTime @default(now())
+
+  @@unique([userId, pattern])
+}
+
+/// Zugang eines Nutzers bei einem Banking-Anbieter (z. B. finAPI-User). Das Passwort liegt nur verschlüsselt vor.
+model ProviderIdentity {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider       String
+  externalUserId String
+  secretEnc      String
+  createdAt      DateTime @default(now())
+
+  @@unique([userId, provider])
+}
+
+/// Verbindung zu einer echten Bank über einen Anbieter (demo | finapi).
+model BankConnection {
+  id            String            @id @default(cuid())
+  userId        String
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider      String
+  bankName      String            @default("Bank")
+  /// PENDING | ACTIVE | NEEDS_REAUTH | ERROR
+  status        String            @default("PENDING")
+  externalId    String?
+  pendingFormId String?
+  pendingTaskId String?
+  lastSyncAt    DateTime?
+  lastError     String?
+  createdAt     DateTime          @default(now())
+  accounts      BankAccountLink[]
+
+  @@index([userId])
+}
+
+/// Ein Konto bei der Bank, optional einem Vierklee-Konto zugeordnet.
+model BankAccountLink {
+  id           String         @id @default(cuid())
+  connectionId String
+  connection   BankConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  externalId   String
+  name         String
+  ibanMasked   String?
+  balanceCents Int?
+  currency     String         @default("EUR")
+  accountType  String?
+  accountId    String?
+  account      Account?       @relation(fields: [accountId], references: [id], onDelete: SetNull)
+  syncBalance  Boolean        @default(true)
+  lastSyncAt   DateTime?
+
+  @@unique([connectionId, externalId])
+}
+
+/// Rücklagen-Posten (Excel-Blatt "Reserve").
+/// PLANNED = bekannte Wiederholung und Betrag (z. B. Weihnachtsgeschenke),
+/// IRREGULAR = unregelmäßig, wird aus dokumentierten Käufen hochgerechnet (z. B. Urlaub).
+model ReserveItem {
+  id                    String            @id @default(cuid())
+  userId                String
+  user                  User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name                  String
+  kind                  String
+  /// Geplantes bzw. "sinnvolles" Intervall in Monaten
+  plannedIntervalMonths Int?
+  /// Geplanter Betrag bzw. "Betrag pro Intervall"
+  plannedAmountCents    Int?
+  /// Unregelmäßig: mit dem tatsächlichen effektiven Betrag rechnen (Excel: "Mit effektivem Betrag rechnen? x")
+  useEffective          Boolean           @default(false)
+  createdAt             DateTime          @default(now())
+  purchases             ReservePurchase[]
+
+  @@index([userId])
+}
+
+/// Dokumentierter Kauf zu einem Rücklagen-Posten (Excel-Blätter "Urlaub", "Doku_2", …).
+model ReservePurchase {
+  id          String      @id @default(cuid())
+  itemId      String
+  item        ReserveItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  date        DateTime
+  amountCents Int
+  note        String?
+
+  @@index([itemId])
+}
+
+/// KI-Verbrauch pro Nutzer und Monat (für Limit und Kostenanzeige).
+model AiUsage {
+  id           String @id @default(cuid())
+  userId       String
+  user         User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// "2026-11"
+  month        String
+  items        Int    @default(0)
+  requests     Int    @default(0)
+  inputTokens  Int    @default(0)
+  outputTokens Int    @default(0)
+
+  @@unique([userId, month])
+}
+
+// ---------------------------------------------------------------------------
+// Zugriffsverwaltung (ähnlich Salesforce): Berechtigungen stecken in
+// Berechtigungssätzen. Ein Nutzer bekommt Sätze über sein Abo, über Gruppen
+// oder direkt. Was er in keinem Satz hat, darf er nicht.
+// Die Berechtigungen selbst (Schlüssel wie "ai.categorize") sind im Code
+// definiert: src/lib/access/catalog.ts
+// ---------------------------------------------------------------------------
+
+model PermissionSet {
+  id          String                    @id @default(cuid())
+  /// Fester Schlüssel für vom System angelegte Sätze (z. B. "admin"), sonst leer
+  key         String?                   @unique
+  name        String                    @unique
+  description String                    @default("")
+  createdAt   DateTime                  @default(now())
+  permissions PermissionSetPermission[]
+  users       UserPermissionSet[]
+  plans       PlanPermissionSet[]
+  groups      GroupPermissionSet[]
+  setGroups   SetGroupItem[]
+}
+
+model PermissionSetPermission {
+  setId         String
+  set           PermissionSet @relation(fields: [setId], references: [id], onDelete: Cascade)
+  /// Schlüssel aus dem Katalog, z. B. "ai.categorize"
+  permissionKey String
+
+  @@id([setId, permissionKey])
+}
+
+/// Direkt einem Nutzer zugewiesener Berechtigungssatz (optional befristet)
+model UserPermissionSet {
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  setId       String
+  set         PermissionSet @relation(fields: [setId], references: [id], onDelete: Cascade)
+  expiresAt   DateTime?
+  grantedById String?
+  createdAt   DateTime      @default(now())
+
+  @@id([userId, setId])
+}
+
+/// Abo-Modell, z. B. "Kostenlos" oder "Plus (mit KI)"
+model Plan {
+  id          String              @id @default(cuid())
+  key         String              @unique
+  name        String
+  description String              @default("")
+  /// Monatspreis in Cent (nur Anzeige, noch keine Abrechnung)
+  priceCents  Int                 @default(0)
+  /// Abo für neue Nutzer und Nutzer ohne Abo
+  isDefault   Boolean             @default(false)
+  /// Vollzugriff: alle Berechtigungen, auch künftige (Abo "Administrator", nicht buchbar)
+  allAccess   Boolean             @default(false)
+  sortOrder   Int                 @default(0)
+  createdAt   DateTime            @default(now())
+  sets        PlanPermissionSet[]
+  setGroups   PlanSetGroup[]
+  users       User[]
+}
+
+model PlanPermissionSet {
+  planId String
+  plan   Plan          @relation(fields: [planId], references: [id], onDelete: Cascade)
+  setId  String
+  set    PermissionSet @relation(fields: [setId], references: [id], onDelete: Cascade)
+
+  @@id([planId, setId])
+}
+
+/// Personengruppe, z. B. "Beta-Tester"
+model UserGroup {
+  id          String               @id @default(cuid())
+  name        String               @unique
+  description String               @default("")
+  createdAt   DateTime             @default(now())
+  members     UserGroupMember[]
+  sets        GroupPermissionSet[]
+  setGroups   UserGroupSetGroup[]
+}
+
+model UserGroupMember {
+  groupId   String
+  group     UserGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+
+  @@id([groupId, userId])
+}
+
+model GroupPermissionSet {
+  groupId String
+  group   UserGroup     @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  setId   String
+  set     PermissionSet @relation(fields: [setId], references: [id], onDelete: Cascade)
+
+  @@id([groupId, setId])
+}
+
+/// Berechtigungssatzgruppe: bündelt zusammengehörige Berechtigungssätze, z. B. "Planung" = Rücklagen + Sparziele
+model PermissionSetGroup {
+  id          String              @id @default(cuid())
+  /// Fester Schlüssel für vom System angelegte Gruppen, sonst leer
+  key         String?             @unique
+  name        String              @unique
+  description String              @default("")
+  createdAt   DateTime            @default(now())
+  sets        SetGroupItem[]
+  plans       PlanSetGroup[]
+  userGroups  UserGroupSetGroup[]
+  users       UserSetGroup[]
+}
+
+model SetGroupItem {
+  setGroupId String
+  setGroup   PermissionSetGroup @relation(fields: [setGroupId], references: [id], onDelete: Cascade)
+  setId      String
+  set        PermissionSet      @relation(fields: [setId], references: [id], onDelete: Cascade)
+
+  @@id([setGroupId, setId])
+}
+
+model PlanSetGroup {
+  planId     String
+  plan       Plan               @relation(fields: [planId], references: [id], onDelete: Cascade)
+  setGroupId String
+  setGroup   PermissionSetGroup @relation(fields: [setGroupId], references: [id], onDelete: Cascade)
+
+  @@id([planId, setGroupId])
+}
+
+model UserGroupSetGroup {
+  groupId    String
+  group      UserGroup          @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  setGroupId String
+  setGroup   PermissionSetGroup @relation(fields: [setGroupId], references: [id], onDelete: Cascade)
+
+  @@id([groupId, setGroupId])
+}
+
+/// Direkt einem Nutzer zugewiesene Satzgruppe (optional befristet)
+model UserSetGroup {
+  userId      String
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  setGroupId  String
+  setGroup    PermissionSetGroup @relation(fields: [setGroupId], references: [id], onDelete: Cascade)
+  expiresAt   DateTime?
+  grantedById String?
+  createdAt   DateTime           @default(now())
+
+  @@id([userId, setGroupId])
+}
+
+/// Protokoll aller Änderungen im Adminbereich
+model AdminAuditLog {
+  id           String   @id @default(cuid())
+  actorId      String?
+  actorName    String
+  targetUserId String?
+  action       String
+  detail       String   @default("")
+  createdAt    DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([targetUserId])
+}
+
+/// Verknüpfte Anmeldung bei einem externen Anbieter (z. B. Google)
+model OAuthAccount {
+  id                String   @id @default(cuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// google
+  provider          String
+  /// Feste ID beim Anbieter (bei Google: "sub")
+  providerAccountId String
+  email             String
+  createdAt         DateTime @default(now())
+  lastLoginAt       DateTime @default(now())
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
