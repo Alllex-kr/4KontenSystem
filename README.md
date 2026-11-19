@@ -37,13 +37,23 @@ Next.js 15 (App Router, Server Actions) · TypeScript · Prisma + SQLite · Tail
 
 ## Starten
 
+Voraussetzung: [Node.js](https://nodejs.org) 20 oder neuer.
+
 ```bash
+git clone https://github.com/Alllex-kr/4KontenSystem.git
+cd 4KontenSystem
 npm install
-npx prisma db push
+npm run setup
 npm run dev
 ```
 
+`npm run setup` legt die `.env` aus `.env.example` an (sie liegt aus Sicherheitsgründen nicht im Repo) und erstellt die Datenbank `prisma/dev.db`. Mehrfach ausführen schadet nicht, auch nach Updates mit neuen Datenbankfeldern.
+
 Dann <http://localhost:3000> öffnen, registrieren und auf dem Dashboard „Beispieldaten laden“ klicken.
+
+**Admin werden:** In der `.env` deine E-Mail eintragen, z. B. `ADMIN_EMAILS="deine@mail.de"`, und den Server neu starten. Mehr dazu in [docs/ZUGRIFF.md](docs/ZUGRIFF.md).
+
+**Typischer Fehler** `Environment variable not found: DATABASE_URL` → `npm run setup` vergessen (es fehlt die `.env`).
 
 Weitere Befehle:
 
