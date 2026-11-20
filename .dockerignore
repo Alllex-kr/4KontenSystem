@@ -1,0 +1,18 @@
+# Nicht ins Docker-Image kopieren
+.git
+node_modules
+.next
+.next-*
+*.tsbuildinfo
+next-env.d.ts
+
+# Geheimnisse und lokale Daten
+.env
+.env.*
+!.env.example
+prisma/*.db
+prisma/*.db-journal
+backups
+docs/test-login.md
+
+.claude

@@ -33,6 +33,8 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Für das Docker-Image: baut einen schlanken Server (server.js) mit nur den nötigen Paketen
+  output: "standalone",
   // Eigener Build-Ordner für einen zweiten Dev-Server (z. B. Tests neben deinem laufenden Server)
   distDir: process.env.NEXT_DIST_DIR || ".next",
   // Projektordner explizit als Root setzen (im Benutzerordner liegt eine weitere package-lock.json).

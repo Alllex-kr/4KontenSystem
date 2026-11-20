@@ -33,21 +33,22 @@ Die Rechenlogik orientiert sich an der Excel-Vorlage „Kontensystem V48“ (Mon
 
 ## Tech-Stack
 
-Next.js 15 (App Router, Server Actions) · TypeScript · Prisma + SQLite · Tailwind CSS 4 · Recharts · dnd-kit · Zod · Vitest
+Next.js 15 (App Router, Server Actions) · TypeScript · Prisma + PostgreSQL · Docker · Tailwind CSS 4 · Recharts · dnd-kit · Zod · Vitest
 
 ## Starten
 
-Voraussetzung: [Node.js](https://nodejs.org) 20 oder neuer.
+Voraussetzungen: [Node.js](https://nodejs.org) 20 oder neuer und [Docker Desktop](https://www.docker.com/products/docker-desktop/) (für die lokale Datenbank).
 
 ```bash
 git clone https://github.com/Alllex-kr/4KontenSystem.git
 cd 4KontenSystem
 npm install
+npm run db:start
 npm run setup
 npm run dev
 ```
 
-`npm run setup` legt die `.env` aus `.env.example` an (sie liegt aus Sicherheitsgründen nicht im Repo) und erstellt die Datenbank `prisma/dev.db`. Mehrfach ausführen schadet nicht, auch nach Updates mit neuen Datenbankfeldern.
+`npm run db:start` startet PostgreSQL in Docker (`compose.dev.yml`). `npm run setup` legt die `.env` aus `.env.example` an (sie liegt aus Sicherheitsgründen nicht im Repo) und spielt die Datenbank-Migrationen ein. Mehrfach ausführen schadet nicht, auch nach Updates mit neuen Migrationen.
 
 Dann <http://localhost:3000> öffnen, registrieren und auf dem Dashboard „Beispieldaten laden“ klicken.
 
@@ -61,11 +62,12 @@ Weitere Befehle:
 npm test          # Tests des Rechenkerns (src/lib/finance.ts)
 npm run typecheck # TypeScript prüfen
 npm run db:studio # Datenbank ansehen
+npm run db:migrate -- --name beschreibung  # nach Änderungen an prisma/schema.prisma
 ```
 
-## Auf PostgreSQL umstellen
+## Auf dem Server betreiben
 
-In `prisma/schema.prisma` `provider = "postgresql"` setzen, `DATABASE_URL` in `.env` anpassen und `npx prisma db push` ausführen.
+Mit Docker Compose (Caddy für HTTPS, App, PostgreSQL), täglichen Sicherungen und automatischen Migrationen: [docs/BETRIEB.md](docs/BETRIEB.md).
 
 ## Projektstruktur
 

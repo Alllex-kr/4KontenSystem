@@ -22,7 +22,7 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
   const onlineSince = new Date(now.getTime() - ONLINE_MS);
 
   const where: Prisma.UserWhereInput = {
-    ...(q.trim() ? { OR: [{ name: { contains: q.trim() } }, { email: { contains: q.trim().toLowerCase() } }] } : {}),
+    ...(q.trim() ? { OR: [{ name: { contains: q.trim(), mode: "insensitive" } }, { email: { contains: q.trim(), mode: "insensitive" } }] } : {}),
     ...(filter === "online" ? { lastSeenAt: { gte: onlineSince }, disabledAt: null } : {}),
     ...(filter === "angemeldet" ? { sessions: { some: { expiresAt: { gt: now } } }, disabledAt: null } : {}),
     ...(filter === "gesperrt" ? { disabledAt: { not: null } } : {}),

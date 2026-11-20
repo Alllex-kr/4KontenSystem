@@ -1,0 +1,20 @@
+# HTTPS für FinanzKlee. Caddy holt und erneuert das Zertifikat automatisch.
+# DOMAIN kommt aus der .env (z. B. DOMAIN=finanzklee.de).
+
+{$DOMAIN} {
+	encode zstd gzip
+	reverse_proxy app:3000
+
+	# Zugriffsprotokolle nach 14 Tagen löschen (so steht es in der Datenschutzerklärung)
+	log {
+		output file /data/logs/access.log {
+			roll_keep_for 336h
+		}
+	}
+}
+
+# Weitere Adressen leiten auf die Hauptdomain um.
+# Hast du z. B. auch die .com, ergänze sie hier: www.{$DOMAIN}, finanzklee.com, www.finanzklee.com {
+www.{$DOMAIN} {
+	redir https://{$DOMAIN}{uri} permanent
+}

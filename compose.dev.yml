@@ -1,0 +1,22 @@
+# Nur die Datenbank für die lokale Entwicklung.
+# Starten:  npm run db:start   (danach npm run dev wie gewohnt)
+# Passt zu DATABASE_URL in .env.example.
+
+name: finanzklee-dev
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: finanzklee
+      POSTGRES_PASSWORD: finanzklee
+      POSTGRES_DB: finanzklee
+    ports:
+      # Nur von deinem eigenen Rechner aus erreichbar
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - pgdata-dev:/var/lib/postgresql/data
+
+volumes:
+  pgdata-dev:

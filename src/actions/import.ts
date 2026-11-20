@@ -20,7 +20,7 @@ async function ownAccount(userId: string, accountId: string) {
 
 async function existingHashes(userId: string, accountId: string, hashes: string[]) {
   const found = new Set<string>();
-  // In Blöcken abfragen (SQLite-Grenze für Parameter)
+  // In Blöcken abfragen (hält die Zahl der Parameter pro Abfrage klein)
   for (let i = 0; i < hashes.length; i += 400) {
     const chunk = hashes.slice(i, i + 400);
     const rows = await prisma.transaction.findMany({
