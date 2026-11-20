@@ -26,7 +26,9 @@ services:
 
   app:
     build: .
-    image: finanzklee-app
+    # Mit GitHub Actions: fertiges Image aus der Registry (setzt scripts/deploy.sh in der .env).
+    # Ohne APP_IMAGE baut der Server das Image selbst (docker compose up -d --build).
+    image: ${APP_IMAGE:-finanzklee-app}
     restart: unless-stopped
     env_file: .env
     environment:

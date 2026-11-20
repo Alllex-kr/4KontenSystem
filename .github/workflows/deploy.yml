@@ -1,0 +1,104 @@
+# Push auf main: prüfen → Docker-Image bauen → in die GitHub Container Registry → auf den Server ausrollen.
+#
+# Das Ausrollen läuft erst, wenn es eingerichtet ist (docs/BETRIEB.md, Abschnitt „Automatisch ausrollen“):
+#   Repository-Variable  DEPLOY_ENABLED = true
+#   Secrets der Umgebung "production": DEPLOY_HOST, DEPLOY_USER, DEPLOY_SSH_KEY, DEPLOY_KNOWN_HOSTS
+# Bis dahin wird nur geprüft und das Image gebaut.
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  ci:
+    name: CI
+    uses: ./.github/workflows/ci.yml
+
+  image:
+    name: Docker-Image bauen
+    needs: ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image: ${{ steps.name.outputs.image }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Image-Name (Registry verlangt Kleinbuchstaben)
+        id: name
+        run: echo "image=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ steps.name.outputs.image }}:latest
+            ${{ steps.name.outputs.image }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    name: Auf Server ausrollen
+    needs: image
+    if: vars.DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: production
+      url: ${{ vars.APP_URL }}
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: SSH einrichten
+        env:
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
+          # Der Server-Schlüssel ist fest hinterlegt: Verbindungen zu einem fremden Server werden abgelehnt
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+
+      - name: Ausrollen
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          USER: ${{ secrets.DEPLOY_USER }}
+          IMAGE: ${{ needs.image.outputs.image }}:${{ github.sha }}
+          # Gilt nur, solange dieser Job läuft. Der Server speichert kein dauerhaftes Passwort.
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REGISTRY_USER: ${{ github.actor }}
+        run: |
+          # Token über die Standardeingabe statt als Argument (sonst kurz in der Prozessliste des Servers sichtbar)
+          printf '%s' "$REGISTRY_TOKEN" | ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes "$USER@$HOST" \
+            "cd /opt/finanzklee && REGISTRY_USER='$REGISTRY_USER' ./scripts/deploy.sh '$IMAGE'"
+
+      - name: Erreichbarkeit prüfen
+        if: vars.APP_URL != ''
+        run: |
+          for i in $(seq 1 20); do
+            curl -fsS -o /dev/null "${{ vars.APP_URL }}/login" && { echo "Seite antwortet."; exit 0; }
+            sleep 5
+          done
+          echo "::error::${{ vars.APP_URL }} antwortet nach dem Ausrollen nicht."; exit 1

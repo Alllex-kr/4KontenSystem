@@ -147,6 +147,8 @@ Teste das einmal, bevor du es im Ernstfall brauchst.
 
 ## 8. Updates einspielen
 
+Am besten automatisch, siehe Abschnitt 10. Von Hand (der Server baut das Image dann selbst):
+
 ```bash
 cd /opt/finanzklee && ./scripts/backup.sh && git pull && docker compose up -d --build
 ```
@@ -156,6 +158,130 @@ Neue Migrationen spielt die App beim Start selbst ein.
 ## 9. Vertrag zur Auftragsverarbeitung
 
 Bei netcup im CCP unter „Stammdaten“ bzw. „Auftragsverarbeitung“ abschließen. Die Datenschutzerklärung setzt ihn voraus.
+
+## 10. Automatisch ausrollen mit GitHub Actions
+
+Danach gilt: **Push auf `main` → Tests → Docker-Image wird gebaut → Server holt es sich.**
+Sind die Tests rot, wird nichts ausgerollt. Startet die neue Version nicht sauber, kehrt der Server von selbst
+zur vorherigen zurück (`scripts/deploy.sh`). Vor jedem Update wird die Datenbank gesichert.
+
+Ohne diese Einrichtung prüft GitHub Actions trotzdem jeden Push und baut das Image, rollt aber nicht aus.
+
+### 10.1 Benutzer für das Ausrollen anlegen (auf dem Server)
+
+GitHub soll sich nicht als `root` anmelden, sondern als eigener Benutzer mit genau den nötigen Rechten.
+
+```bash
+adduser --disabled-password --gecos "" deploy
+```
+
+```bash
+usermod -aG docker deploy && chown -R deploy:deploy /opt/finanzklee
+```
+
+Die tägliche Sicherung ab jetzt als `deploy` ausführen: bei `root` entfernen (`crontab -e`, Zeile löschen) und
+bei `deploy` eintragen:
+
+```bash
+crontab -u deploy -e
+```
+
+```
+30 3 * * * /opt/finanzklee/scripts/backup.sh >> /opt/finanzklee/backups/backup.log 2>&1
+```
+
+### 10.2 SSH-Schlüssel erzeugen (auf deinem PC)
+
+In PowerShell, **ohne Passphrase** (einfach Enter drücken, GitHub kann keine eingeben):
+
+```bash
+ssh-keygen -t ed25519 -C "github-deploy" -f finanzklee-deploy
+```
+
+Das erzeugt zwei Dateien: `finanzklee-deploy` (privat, geht nur zu GitHub) und `finanzklee-deploy.pub` (öffentlich, geht auf den Server).
+
+Inhalt von `finanzklee-deploy.pub` anzeigen und kopieren:
+
+```bash
+type finanzklee-deploy.pub
+```
+
+Auf dem Server einfügen:
+
+```bash
+mkdir -p /home/deploy/.ssh && nano /home/deploy/.ssh/authorized_keys
+```
+
+```bash
+chown -R deploy:deploy /home/deploy/.ssh && chmod 700 /home/deploy/.ssh && chmod 600 /home/deploy/.ssh/authorized_keys
+```
+
+Test vom PC aus (muss ohne Passwort klappen):
+
+```bash
+ssh -i finanzklee-deploy deploy@DEINE-IP "docker compose version"
+```
+
+### 10.3 Server-Fingerabdruck ermitteln (auf deinem PC)
+
+Damit sich GitHub nur mit **deinem** Server verbindet und nicht mit einem untergeschobenen:
+
+```bash
+ssh-keyscan -t ed25519 DEINE-IP
+```
+
+Die ausgegebene Zeile (beginnt mit der IP) kopieren.
+
+### 10.4 In GitHub eintragen
+
+Im Repository unter **Settings → Environments → New environment**, Name: `production`. Dort unter
+**Environment secrets** anlegen:
+
+| Secret | Inhalt |
+|---|---|
+| `DEPLOY_HOST` | `DEINE-IP` |
+| `DEPLOY_USER` | `deploy` |
+| `DEPLOY_SSH_KEY` | kompletter Inhalt der Datei `finanzklee-deploy` (inkl. `-----BEGIN…` und `-----END…`) |
+| `DEPLOY_KNOWN_HOSTS` | die Zeile aus 10.3 |
+
+Dann unter **Settings → Secrets and variables → Actions → Variables** anlegen:
+
+| Variable | Wert |
+|---|---|
+| `DEPLOY_ENABLED` | `true` |
+| `APP_URL` | `https://finanzklee.de` |
+
+Danach die Datei `finanzklee-deploy` auf deinem PC an einem sicheren Ort aufbewahren oder löschen.
+Wer sie hat, kann auf deinem Server Updates einspielen.
+
+### 10.5 Testen
+
+Unter **Actions → Deploy → Run workflow** einmal von Hand starten. Alle drei Schritte (CI, Docker-Image,
+Auf Server ausrollen) müssen grün werden.
+
+Tipp: Unter deinem GitHub-Profil → **Packages** → `4kontensystem` → **Package settings** die Sichtbarkeit auf
+**Public** stellen (der Code ist ohnehin öffentlich). Dann kann der Server Images auch ohne Anmeldung laden,
+z. B. beim Zurückspringen auf eine ältere Version von Hand.
+
+### 10.6 Empfohlen: `main` schützen
+
+Unter **Settings → Branches → Add branch ruleset** für `main`:
+- **Require a pull request before merging**
+- **Require status checks to pass** → `CI / Prüfen und bauen` auswählen
+
+Dann landen Änderungen nur noch über Pull Requests mit grünen Tests auf `main` und damit auf dem Server.
+Für dich heißt das: Neue Arbeit auf einem eigenen Branch, Pull Request öffnen, nach grünem CI zusammenführen.
+
+### Zurück auf eine ältere Version
+
+Jedes Image ist mit seinem Commit markiert. Auf dem Server:
+
+```bash
+cd /opt/finanzklee && ./scripts/deploy.sh ghcr.io/alllex-kr/4kontensystem:<commit-hash>
+```
+
+Achtung: Datenbank-Migrationen werden dabei nicht zurückgedreht. Bei Problemen nach einer Migration lieber
+mit einem neuen Commit nach vorne korrigieren.
 
 ---
 

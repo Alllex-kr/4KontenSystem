@@ -1,0 +1,27 @@
+# Dependabot: schlägt Updates als Pull Requests vor. CI prüft jeden davon automatisch.
+# Sicherheitsupdates kommen sofort, normale Updates einmal pro Woche (gebündelt, damit es nicht zu viele werden).
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      kleine-updates:
+        update-types: [minor, patch]
+    ignore:
+      # Große Versionssprünge bewusst und einzeln angehen (z. B. Next.js 16, Prisma 7)
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: monthly

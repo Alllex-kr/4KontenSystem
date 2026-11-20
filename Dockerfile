@@ -21,6 +21,8 @@ RUN npx prisma generate && npm run build
 
 # --- 3. Schlankes Laufzeit-Image -------------------------------------------
 FROM node:${NODE_VERSION}-bookworm-slim AS runner
+# Verknüpft das Image in der GitHub Container Registry mit dem Repository
+LABEL org.opencontainers.image.source="https://github.com/Alllex-kr/4KontenSystem"
 ARG PRISMA_VERSION
 WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends openssl && rm -rf /var/lib/apt/lists/* \
