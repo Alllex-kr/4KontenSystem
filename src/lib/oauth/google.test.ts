@@ -5,7 +5,7 @@ import { buildAuthUrl, createAuthRequest, decodeJwtPayload, displayName, profile
 // ---------------------------------------------------------------------------
 // Datenbank für signInWithGoogle im Speicher nachbauen
 // ---------------------------------------------------------------------------
-type U = { id: string; email: string; name: string; passwordHash: string | null; disabledAt: Date | null };
+type U = { id: string; email: string; name: string; passwordHash: string | null; disabledAt: Date | null; emailVerifiedAt?: Date | null };
 type A = { id: string; userId: string; provider: string; providerAccountId: string; email: string };
 const db = { users: [] as U[], accounts: [] as A[] };
 let n = 0;
@@ -27,6 +27,11 @@ vi.mock("../db", () => ({
     },
     user: {
       findUnique: async ({ where }: { where: { email: string } }) => db.users.find((u) => u.email === where.email) ?? null,
+      updateMany: async ({ where, data }: { where: { id: string; emailVerifiedAt: null }; data: Partial<U> }) => {
+        const hit = db.users.filter((u) => u.id === where.id && !u.emailVerifiedAt);
+        hit.forEach((u) => Object.assign(u, data));
+        return { count: hit.length };
+      },
       create: async ({ data }: { data: Omit<U, "id" | "disabledAt"> & { oauthAccounts: { create: Omit<A, "id" | "userId"> } } }) => {
         const { oauthAccounts, ...rest } = data;
         const u = { id: `u${++n}`, disabledAt: null, ...rest };
@@ -119,6 +124,7 @@ describe("Google: Konto finden oder anlegen", () => {
     expect(first).toMatchObject({ ok: true, isNew: true });
     expect(db.users).toHaveLength(1);
     expect(db.users[0]).toMatchObject({ email: "lea@gmail.com", name: "Lea", passwordHash: null });
+    expect(db.users[0].emailVerifiedAt).toBeInstanceOf(Date);
 
     const second = await signInWithGoogle(profile());
     expect(second).toEqual({ ok: true, userId: db.users[0].id, isNew: false });
@@ -131,6 +137,8 @@ describe("Google: Konto finden oder anlegen", () => {
     expect(r).toEqual({ ok: true, userId: "u-alt", isNew: false });
     expect(db.accounts).toEqual([expect.objectContaining({ userId: "u-alt", provider: "google", providerAccountId: "google-123" })]);
     expect(db.users[0].passwordHash).toBe("hash");
+    // Google hat die Adresse bestätigt: gilt jetzt auch bei FinanzKlee als bestätigt
+    expect(db.users[0].emailVerifiedAt).toBeInstanceOf(Date);
   });
 
   it("verknüpft oder erstellt nichts, wenn Google die E-Mail nicht bestätigt hat", async () => {

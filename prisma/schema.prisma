@@ -11,36 +11,39 @@ datasource db {
 }
 
 model User {
-  id           String             @id @default(cuid())
-  email        String             @unique
-  name         String
+  id                 String             @id @default(cuid())
+  email              String             @unique
+  name               String
   /// Leer bei Konten, die sich nur mit Google anmelden
-  passwordHash String?
-  createdAt    DateTime           @default(now())
-  sessions     Session[]
-  accounts     Account[]
-  payments     RecurringPayment[]
-  transactions Transaction[]
-  goals        SavingsGoal[]
-  settings     Settings?
-  importRules  ImportRule[]
-  bankConnections BankConnection[]
-  reserveItems ReserveItem[]
-  aiUsage      AiUsage[]
+  passwordHash       String?
+  createdAt          DateTime           @default(now())
+  sessions           Session[]
+  accounts           Account[]
+  payments           RecurringPayment[]
+  transactions       Transaction[]
+  goals              SavingsGoal[]
+  settings           Settings?
+  importRules        ImportRule[]
+  bankConnections    BankConnection[]
+  reserveItems       ReserveItem[]
+  aiUsage            AiUsage[]
   providerIdentities ProviderIdentity[]
 
   // --- Zugriff & Abo ---
   /// Abo (Plan). Leer = Standard-Abo
-  planId         String?
-  plan           Plan?               @relation(fields: [planId], references: [id], onDelete: SetNull)
+  planId          String?
+  plan            Plan?               @relation(fields: [planId], references: [id], onDelete: SetNull)
   /// Zuletzt aktiv (höchstens minütlich aktualisiert)
-  lastSeenAt     DateTime?
+  lastSeenAt      DateTime?
   /// Gesperrt: kein Login, bestehende Sitzungen gelten nicht mehr
-  disabledAt     DateTime?
-  permissionSets UserPermissionSet[]
-  setGroups      UserSetGroup[]
-  groups         UserGroupMember[]
-  oauthAccounts  OAuthAccount[]
+  disabledAt      DateTime?
+  permissionSets  UserPermissionSet[]
+  setGroups       UserSetGroup[]
+  groups          UserGroupMember[]
+  oauthAccounts   OAuthAccount[]
+  /// Wann die E-Mail-Adresse bestätigt wurde (Link aus der E-Mail oder Anmeldung mit Google)
+  emailVerifiedAt DateTime?
+  emailTokens     EmailToken[]
 }
 
 model Session {
@@ -94,21 +97,21 @@ model RecurringPayment {
 
 /// Tatsächliche Buchung. amountCents ist vorzeichenbehaftet (+ Eingang, - Ausgang).
 model Transaction {
-  id            String   @id @default(cuid())
-  userId        String
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  accountId     String
-  account       Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  amountCents   Int
-  date          DateTime
-  description   String
-  category      String
-  transferGroup String?
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accountId      String
+  account        Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  amountCents    Int
+  date           DateTime
+  description    String
+  category       String
+  transferGroup  String?
   /// false = Buchung lag vor dem letzten Kontoabgleich, der Kontostand wurde nicht verändert
-  affectsBalance Boolean @default(true)
+  affectsBalance Boolean  @default(true)
   /// Fingerabdruck aus dem CSV-Import, um Duplikate zu erkennen
-  importHash    String?
-  createdAt     DateTime @default(now())
+  importHash     String?
+  createdAt      DateTime @default(now())
 
   @@index([userId, date])
   @@index([userId, accountId, importHash])
@@ -143,38 +146,38 @@ model Settings {
 
   // --- Darstellung ---
   /// system | light | dark
-  theme            String  @default("system")
+  theme           String  @default("system")
   /// klee | indigo | violet | emerald | sky | rose | amber
-  accent           String  @default("klee")
+  accent          String  @default("klee")
   /// normal | large
-  fontScale        String  @default("normal")
+  fontScale       String  @default("normal")
   /// Beträge verbergen (z. B. unterwegs)
-  hideAmounts      Boolean @default(false)
+  hideAmounts     Boolean @default(false)
   /// Animationen: system (wie Gerät) | on | off
-  motion           String  @default("system")
+  motion          String  @default("system")
   /// Sprache: de | en | ru | tr | es. Leer = automatisch (Browser)
-  language         String?
+  language        String?
   /// JSON: [{ id, size, visible }] in Anzeigereihenfolge
-  dashboardLayout  String?
+  dashboardLayout String?
 
   // --- Rücklagen (Excel-Blatt "Reserve") ---
   /// Festgesetzter Monatsbetrag für Rücklagen (Dauerauftrag)
-  reserveMonthlyCents Int     @default(0)
+  reserveMonthlyCents Int    @default(0)
   /// Warnung, wenn der festgesetzte Betrag mehr als X % unter der Prognose liegt
-  reserveTolerancePct Int     @default(15)
+  reserveTolerancePct Int    @default(15)
   /// Konto, auf dem die Rücklagen liegen: SPAREN | NOTGROSCHEN
-  reserveAccountKind  String  @default("SPAREN")
+  reserveAccountKind  String @default("SPAREN")
 
   // --- Daueraufträge (Excel: "Daueraufträge anpassen erledigt", "gültig ab") ---
   /// JSON { SPAREN, NOTGROSCHEN, FREIZEIT } in Cent: zuletzt bei der Bank eingerichtete Daueraufträge
-  confirmedOrders     String?
-  ordersValidFrom     DateTime?
+  confirmedOrders String?
+  ordersValidFrom DateTime?
 
   // --- KI (Claude) ---
   /// Opt-in: Umsätze ohne passende Regel von Claude kategorisieren lassen
-  aiCategorization    Boolean   @default(false)
+  aiCategorization Boolean @default(false)
   /// Höchstens so viele Umsätze pro Monat per KI kategorisieren (Kostenschutz)
-  aiMonthlyLimit      Int       @default(1000)
+  aiMonthlyLimit   Int     @default(1000)
 }
 
 /// Gelernte Kategorie-Zuordnung aus dem CSV-Import (z. B. "rewe" -> Lebensmittel)
@@ -476,4 +479,20 @@ model OAuthAccount {
 
   @@unique([provider, providerAccountId])
   @@index([userId])
+}
+
+/// Einmal-Links aus E-Mails (Passwort zurücksetzen, E-Mail bestätigen).
+/// In der Datenbank liegt nur der Hash des Tokens, das Token selbst nur im Link.
+model EmailToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// RESET_PASSWORD | VERIFY_EMAIL
+  purpose   String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, purpose])
 }

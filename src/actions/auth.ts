@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { LIMITS, clientIp, rateLimiter, waitMinutes } from "@/lib/rateLimit";
+import { sendVerificationMail } from "@/lib/verification";
 import { prisma } from "@/lib/db";
 import { createSession, destroySession, rememberAppearance } from "@/lib/auth";
 import { ensureUserSetup } from "@/lib/data";
@@ -42,6 +43,8 @@ export async function register(_prev: ActionState, formData: FormData): Promise<
     data: { name, email, passwordHash: await bcrypt.hash(password, 12) },
   });
   await ensureUserSetup(user.id);
+  // Bestätigungs-E-Mail: Ein Fehler beim Versand soll die Registrierung nicht verhindern
+  await sendVerificationMail(user, t).catch((e) => console.error("[Registrierung] Bestätigungs-E-Mail fehlgeschlagen:", e));
   await createSession(user.id);
   redirect("/dashboard?willkommen=1");
 }

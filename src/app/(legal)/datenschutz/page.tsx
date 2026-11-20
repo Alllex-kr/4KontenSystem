@@ -35,7 +35,7 @@ export default function DatenschutzPage() {
         <li>Wir verarbeiten nur die Daten, die für FinanzKlee nötig sind: dein Konto und die Finanzdaten, die du selbst einträgst oder importierst.</li>
         <li>Wir verkaufen keine Daten, zeigen keine Werbung und nutzen keine Tracking- oder Analyse-Dienste.</li>
         <li>Wir setzen nur technisch notwendige Cookies, deshalb gibt es kein Cookie-Banner.</li>
-        <li>Du kannst jederzeit Auskunft verlangen und dein Konto löschen lassen.</li>
+        <li>Du kannst deine Daten jederzeit in den Einstellungen herunterladen und dein Konto dort selbst löschen.</li>
       </ul>
 
       <h2>3. Hosting und Server-Protokolle</h2>
@@ -53,6 +53,12 @@ export default function DatenschutzPage() {
         Für die Registrierung speichern wir Name, E-Mail-Adresse und dein Passwort. Das Passwort liegt nur als
         sicherer Hash (bcrypt) vor, wir können es nicht lesen. Außerdem speichern wir, wann du dich registriert hast und
         wann du zuletzt aktiv warst. Rechtsgrundlage ist die Erfüllung des Nutzungsvertrags (Art. 6 Abs. 1 lit. b DSGVO).
+      </p>
+
+      <p>
+        Nach der Registrierung schicken wir dir eine E-Mail, mit der du deine Adresse bestätigst. Den Zeitpunkt der
+        Bestätigung speichern wir. Links in E-Mails (Bestätigung, Passwort zurücksetzen) gelten nur kurz und nur einmal; in
+        der Datenbank liegt nur ein Hash des Links.
       </p>
 
       <h2>5. Deine Finanzdaten</h2>
@@ -81,6 +87,15 @@ export default function DatenschutzPage() {
         Damit niemand massenhaft Passwörter ausprobieren kann, zählen wir Anmelde- und Registrierungsversuche pro
         IP-Adresse und E-Mail-Adresse. Diese Zähler liegen nur im Arbeitsspeicher und verfallen nach 15 bis 60 Minuten
         (Art. 6 Abs. 1 lit. f DSGVO; berechtigtes Interesse: Sicherheit der Konten).
+      </p>
+
+      <h2>{next()}. E-Mails</h2>
+      <p>
+        Wir schicken dir nur E-Mails, die für dein Konto nötig sind: die Bestätigung deiner E-Mail-Adresse und Links zum
+        Zurücksetzen deines Passworts. Kein Newsletter, keine Werbung. Für den Versand nutzen wir{" "}
+        {i.mailProvider || "einen E-Mail-Dienstleister"}, der dafür deine E-Mail-Adresse, deinen Namen und den Inhalt der
+        E-Mail erhält. Mit dem Dienstleister besteht ein Vertrag zur Auftragsverarbeitung (Art. 28 DSGVO). Rechtsgrundlage
+        ist Art. 6 Abs. 1 lit. b DSGVO.
       </p>
 
       {google && (
@@ -128,8 +143,8 @@ export default function DatenschutzPage() {
 
       <h2>{next()}. Speicherdauer</h2>
       <p>
-        Deine Daten speichern wir, solange dein Konto besteht. Wenn du dein Konto löschen lässt, löschen wir alle
-        zugehörigen Daten. In Sicherungskopien (Backups) bleiben sie höchstens 14 Tage erhalten, bis die Kopie
+        Deine Daten speichern wir, solange dein Konto besteht. Löschst du dein Konto (in den Einstellungen unter „Dein
+        Konto“), löschen wir sofort alle zugehörigen Daten; verbundene Bankkonten werden auch beim Anbieter getrennt. In Sicherungskopien (Backups) bleiben sie höchstens 14 Tage erhalten, bis die Kopie
         automatisch überschrieben wird. Änderungen, die Administratoren an Konten vornehmen, werden zur Nachvollziehbarkeit
         protokolliert.
       </p>
@@ -146,7 +161,9 @@ export default function DatenschutzPage() {
         <li>Widerruf einer Einwilligung mit Wirkung für die Zukunft (Art. 7 Abs. 3).</li>
       </ul>
       <p>
-        Schreib uns dafür einfach eine E-Mail{i.email && <> an <a href={`mailto:${i.email}`}>{i.email}</a></>}. Außerdem
+        Deine Daten herunterladen (Auskunft und Datenübertragbarkeit) und dein Konto löschen kannst du jederzeit selbst
+        in den Einstellungen unter „Dein Konto“. Für alles andere schreib uns einfach eine E-Mail
+        {i.email && <> an <a href={`mailto:${i.email}`}>{i.email}</a></>}. Außerdem
         kannst du dich bei einer Datenschutz-Aufsichtsbehörde beschweren, zum Beispiel bei der Behörde deines
         Bundeslandes.
       </p>

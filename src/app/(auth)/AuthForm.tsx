@@ -22,7 +22,7 @@ function Submit({ label }: { label: string }) {
   );
 }
 
-export function AuthForm({ mode, google = false, notice }: { mode: "login" | "register"; google?: boolean; notice?: string }) {
+export function AuthForm({ mode, google = false, notice, info }: { mode: "login" | "register"; google?: boolean; notice?: string; info?: string }) {
   const t = useT();
   const [state, action] = useActionState(mode === "login" ? login : register, undefined);
   const [show, setShow] = useState(false);
@@ -39,6 +39,11 @@ export function AuthForm({ mode, google = false, notice }: { mode: "login" | "re
         <p className="mt-1 text-sm text-muted">
           {isLogin ? t("Schön, dass du da bist. Melde dich an.") : t("In zwei Minuten startklar, ganz ohne Bankzugang.")}
         </p>
+        {info && (
+          <p className="animate-fade-down mt-4 rounded-xl bg-good/10 px-3 py-2 text-sm font-medium text-good" role="status">
+            {info}
+          </p>
+        )}
         {notice && (
           <p className="animate-fade-down mt-4 rounded-xl bg-bad/10 px-3 py-2 text-sm font-medium text-bad" role="alert">
             {notice}
@@ -67,7 +72,10 @@ export function AuthForm({ mode, google = false, notice }: { mode: "login" | "re
             <input className="input" id="email" name="email" type="email" inputMode="email" autoComplete="email" required />
           </div>
           <div>
-            <label className="label" htmlFor="password">{t("Passwort")}</label>
+            <div className="flex items-baseline justify-between gap-2">
+              <label className="label" htmlFor="password">{t("Passwort")}</label>
+              {isLogin && <Link href="/passwort-vergessen" className="text-xs font-semibold text-accent hover:underline">{t("Passwort vergessen?")}</Link>}
+            </div>
             <div className="relative">
               <input
                 className="input pr-11"

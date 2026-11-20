@@ -6,6 +6,8 @@ import { loadDemoData, saveSettings } from "@/actions/finance";
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
 import { Card, PageHeader } from "@/components/ui";
 import { LegalLinks } from "@/components/LegalLinks";
+import { AccountSection } from "./AccountSection";
+import { prisma } from "@/lib/db";
 import { saveAiSettings } from "@/actions/ai";
 import { getAiStatus } from "@/lib/ai/usage";
 import { getAccess } from "@/lib/access";
@@ -23,7 +25,11 @@ export default async function EinstellungenPage() {
   const t = await getT();
   const user = await requireUser();
   const { settings, summary, allocation } = await loadOverview(user.id);
-  const [aiStatus, access] = await Promise.all([getAiStatus(user.id), getAccess(user.id)]);
+  const [aiStatus, access, account] = await Promise.all([
+    getAiStatus(user.id),
+    getAccess(user.id),
+    prisma.user.findUnique({ where: { id: user.id }, select: { emailVerifiedAt: true, passwordHash: true } }),
+  ]);
   const ai = { ...aiStatus, planName: access.plan?.name };
 
   return (
@@ -144,6 +150,10 @@ export default async function EinstellungenPage() {
             <button className="btn-ghost"><Sparkles size={16} />{" "}{t("Beispieldaten laden")}</button>
           </form>
         </div>
+      </Card>
+
+      <Card title={t("Dein Konto")}>
+        <AccountSection email={user.email} verified={Boolean(account?.emailVerifiedAt)} hasPassword={Boolean(account?.passwordHash)} />
       </Card>
 
       <LegalLinks className="pb-2" />

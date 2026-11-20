@@ -8,7 +8,7 @@ import { APPEARANCE_COOKIE, normalizeAppearance } from "./appearance";
 export const SESSION_COOKIE = "vks_session";
 const SESSION_DAYS = 30;
 
-function hashToken(token: string) {
+export function hashToken(token: string) {
   return createHash("sha256").update(token).digest("hex");
 }
 

@@ -61,6 +61,13 @@ export const LIMITS = {
   loginPerIp: { max: 30, windowMs: 15 * MIN },
   /** Neue Konten pro IP-Adresse */
   registerPerIp: { max: 5, windowMs: 60 * MIN },
+  /** "Passwort vergessen"-Anfragen pro IP und pro E-Mail (schützt auch vor E-Mail-Spam an fremde Adressen) */
+  resetPerIp: { max: 5, windowMs: 60 * MIN },
+  resetPerEmail: { max: 3, windowMs: 60 * MIN },
+  /** Bestätigungs-E-Mail erneut senden, pro Konto */
+  verifyResendPerUser: { max: 3, windowMs: 60 * MIN },
+  /** Passwortprüfung beim Löschen des Kontos */
+  deletePerUser: { max: 5, windowMs: 15 * MIN },
 } satisfies Record<string, Limit>;
 
 // Ein Zähler für den ganzen Prozess, auch wenn Next.js das Modul im Dev-Modus neu lädt.

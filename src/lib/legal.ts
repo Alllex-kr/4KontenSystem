@@ -16,6 +16,8 @@ export function legalInfo() {
     phone: env("IMPRESSUM_PHONE"),
     /** Hoster des Servers, z. B. "Hetzner Online GmbH, Industriestr. 25, 91710 Gunzenhausen" */
     hoster: env("HOSTING_PROVIDER"),
+    /** Anbieter des E-Mail-Versands (Name und Adresse), erscheint in der Datenschutzerklärung */
+    mailProvider: env("MAIL_PROVIDER"),
   };
   const missing = [
     !info.name && "IMPRESSUM_NAME",

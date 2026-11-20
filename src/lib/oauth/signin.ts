@@ -28,6 +28,8 @@ export async function signInWithGoogle(profile: GoogleProfile): Promise<OAuthRes
   if (existing) {
     if (existing.disabledAt) return { ok: false, error: "gesperrt" };
     await prisma.oAuthAccount.create({ data: { userId: existing.id, provider: "google", providerAccountId: profile.sub, email: profile.email } });
+    // Google hat die Adresse bestätigt (emailVerified oben geprüft)
+    await prisma.user.updateMany({ where: { id: existing.id, emailVerifiedAt: null }, data: { emailVerifiedAt: new Date() } });
     return { ok: true, userId: existing.id, isNew: false };
   }
 
@@ -36,6 +38,7 @@ export async function signInWithGoogle(profile: GoogleProfile): Promise<OAuthRes
       email: profile.email,
       name: displayName(profile),
       passwordHash: null,
+      emailVerifiedAt: new Date(),
       oauthAccounts: { create: { provider: "google", providerAccountId: profile.sub, email: profile.email } },
     },
   });

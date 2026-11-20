@@ -93,6 +93,23 @@ IMPRESSUM_EMAIL="kontakt@finanzklee.de"
 HOSTING_PROVIDER="netcup GmbH, Daimlerstraße 25, 76185 Karlsruhe"
 ```
 
+**E-Mail-Versand** (für Bestätigungs-E-Mails und „Passwort vergessen“). Ohne diese Werte können sich Nutzer, die
+ihr Passwort vergessen haben, nicht mehr selbst helfen:
+
+```
+SMTP_HOST="smtp.example.de"
+SMTP_PORT="587"
+SMTP_USER="noreply@finanzklee.de"
+SMTP_PASS="…"
+MAIL_FROM="FinanzKlee <noreply@finanzklee.de>"
+MAIL_PROVIDER="Name und Adresse des Anbieters"
+```
+
+Bei netcup legst du im Webhosting- oder Mail-Paket ein Postfach `noreply@finanzklee.de` an, die SMTP-Daten
+stehen dort. Für viele Nutzer ist ein Versanddienst zuverlässiger (bessere Zustellung, kein Spam-Ordner),
+z. B. Brevo, Mailjet oder Amazon SES (alle mit EU-Rechenzentrum). Richte beim Domain-Anbieter die
+DNS-Einträge ein, die der Dienst vorgibt (SPF, DKIM), sonst landen die E-Mails im Spam.
+
 `DATABASE_URL` und `APP_URL` musst du nicht ändern, das übernimmt `compose.yml`.
 Speichern: Strg+O, Enter, Strg+X.
 
