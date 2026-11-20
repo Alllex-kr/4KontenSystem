@@ -2,7 +2,7 @@
 # Bauen:  docker build -t finanzklee .
 # Auf dem Server startet compose.yml das Image zusammen mit PostgreSQL und Caddy.
 
-ARG NODE_VERSION=22
+ARG NODE_VERSION=24
 ARG PRISMA_VERSION=6.16.2
 
 # --- 1. Abhängigkeiten installieren ---------------------------------------
