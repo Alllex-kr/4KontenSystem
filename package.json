@@ -28,7 +28,7 @@
     "react": "19.1.1",
     "react-dom": "19.1.1",
     "recharts": "2.15.4",
-    "zod": "3.25.76"
+    "zod": "4.6.7"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "4.1.13",
@@ -38,6 +38,6 @@
     "prisma": "6.16.2",
     "tailwindcss": "4.1.13",
     "typescript": "5.9.2",
-    "vitest": "3.2.4"
+    "vitest": "4.1.12"
   }
 }

@@ -1,8 +1,10 @@
 "use server";
 
 import bcrypt from "bcryptjs";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { LIMITS, clientIp, rateLimiter, waitMinutes } from "@/lib/rateLimit";
 import { prisma } from "@/lib/db";
 import { createSession, destroySession, rememberAppearance } from "@/lib/auth";
 import { ensureUserSetup } from "@/lib/data";
@@ -21,6 +23,11 @@ export async function register(_prev: ActionState, formData: FormData): Promise<
   const parsed = registerSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { error: t(parsed.error.issues[0].message) };
   const { name, email, password } = parsed.data;
+
+  const ipKey = `register:ip:${clientIp(await headers())}`;
+  const wait = rateLimiter.blockedFor(ipKey, LIMITS.registerPerIp);
+  if (wait) return { error: t("Zu viele Versuche. Bitte versuche es in etwa {n} Min. noch einmal.", { n: waitMinutes(wait) }) };
+  rateLimiter.hit(ipKey, LIMITS.registerPerIp);
 
   const exists = await prisma.user.findUnique({ where: { email } });
   if (exists) {
@@ -48,11 +55,26 @@ export async function login(_prev: ActionState, formData: FormData): Promise<Act
   const t = await getT();
   const parsed = loginSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { error: t(parsed.error.issues[0].message) };
+
+  // Schutz gegen Durchprobieren: pro E-Mail (nur Fehlversuche) und pro IP (alle Versuche)
+  const emailKey = `login:email:${parsed.data.email}`;
+  const ipKey = `login:ip:${clientIp(await headers())}`;
+  const wait = Math.max(
+    rateLimiter.blockedFor(emailKey, LIMITS.loginPerEmail),
+    rateLimiter.blockedFor(ipKey, LIMITS.loginPerIp),
+  );
+  if (wait) return { error: t("Zu viele Versuche. Bitte versuche es in etwa {n} Min. noch einmal.", { n: waitMinutes(wait) }) };
+  rateLimiter.hit(ipKey, LIMITS.loginPerIp);
+
   const user = await prisma.user.findUnique({ where: { email: parsed.data.email } });
   // Gleiche Meldung für unbekannte E-Mail und falsches Passwort.
   if (user && !user.passwordHash) return { error: t("Dieses Konto nutzt die Anmeldung mit Google. Tippe oben auf „Mit Google fortfahren“.") };
   const ok = user?.passwordHash ? await bcrypt.compare(parsed.data.password, user.passwordHash) : false;
-  if (!user || !ok) return { error: t("E-Mail oder Passwort ist falsch.") };
+  if (!user || !ok) {
+    rateLimiter.hit(emailKey, LIMITS.loginPerEmail);
+    return { error: t("E-Mail oder Passwort ist falsch.") };
+  }
+  rateLimiter.reset(emailKey);
   if (user.disabledAt) return { error: t("Dieses Konto ist gesperrt. Bitte wende dich an den Support.") };
   await createSession(user.id);
   await rememberAppearance(user.id);

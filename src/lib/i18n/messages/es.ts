@@ -792,6 +792,7 @@ const messages: Messages = {
   "− Auszahlen": "− Retirar",
   "≈ {v0} pro Tag bis Monatsende": "≈ {v0} al día hasta fin de mes",
   "🎉 Ziel erreicht!": "🎉 ¡Meta alcanzada!",
+  "Zu viele Versuche. Bitte versuche es in etwa {n} Min. noch einmal.": "Demasiados intentos. Vuelve a intentarlo en unos {n} min.",
 };
 
 export default messages;

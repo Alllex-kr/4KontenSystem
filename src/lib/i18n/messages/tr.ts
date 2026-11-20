@@ -792,6 +792,7 @@ const messages: Messages = {
   "− Auszahlen": "− Çek",
   "≈ {v0} pro Tag bis Monatsende": "≈ ay sonuna kadar günde {v0}",
   "🎉 Ziel erreicht!": "🎉 Hedefe ulaşıldı!",
+  "Zu viele Versuche. Bitte versuche es in etwa {n} Min. noch einmal.": "Çok fazla deneme. Lütfen yaklaşık {n} dk. sonra tekrar deneyin.",
 };
 
 export default messages;
