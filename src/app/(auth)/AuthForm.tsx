@@ -10,6 +10,7 @@ import { useChangeKey } from "@/lib/motion";
 import { GoogleButton } from "./GoogleButton";
 import { useT } from "@/lib/i18n/client";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { LegalLinks } from "@/components/LegalLinks";
 
 function Submit({ label }: { label: string }) {
   const t = useT();
@@ -99,6 +100,7 @@ export function AuthForm({ mode, google = false, notice }: { mode: "login" | "re
         </Link>
       </p>
       <LanguageSwitcher compact className="mx-auto mt-4 w-44" />
+      <LegalLinks className="mt-4" />
     </div>
   );
 }

@@ -793,6 +793,10 @@ const messages: Messages = {
   "≈ {v0} pro Tag bis Monatsende": "≈ ay sonuna kadar günde {v0}",
   "🎉 Ziel erreicht!": "🎉 Hedefe ulaşıldı!",
   "Zu viele Versuche. Bitte versuche es in etwa {n} Min. noch einmal.": "Çok fazla deneme. Lütfen yaklaşık {n} dk. sonra tekrar deneyin.",
+  "Rechtliches": "Yasal bilgiler",
+  "Impressum": "Künye",
+  "Datenschutz": "Gizlilik",
+  "Diese Seite ist nur auf Deutsch verfügbar. Die deutsche Fassung ist rechtlich verbindlich.": "Bu sayfa yalnızca Almanca olarak mevcuttur. Hukuken bağlayıcı olan Almanca sürümdür.",
 };
 
 export default messages;

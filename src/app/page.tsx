@@ -8,6 +8,7 @@ import { Logo, LogoMark } from "@/components/brand/Logo";
 import { getT } from "@/lib/i18n/server";
 import { msg } from "@/lib/i18n/translate";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { LegalLinks } from "@/components/LegalLinks";
 import { rich } from "@/lib/i18n/rich";
 
 const LEAF_TEXT: Record<(typeof ACCOUNT_KINDS)[number], { emoji: string; text: string }> = {
@@ -120,7 +121,10 @@ export default async function Home() {
       <footer className="border-t border-line py-8">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 text-sm text-muted sm:px-6">
           <Logo size={22} />
-          <span>{BRAND.tagline} · © {new Date().getFullYear()}</span>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <LegalLinks className="text-sm" />
+            <span>{t(BRAND.tagline)} · © {new Date().getFullYear()}</span>
+          </div>
         </div>
       </footer>
     </div>

@@ -793,6 +793,10 @@ const messages: Messages = {
   "≈ {v0} pro Tag bis Monatsende": "≈ {v0} в день до конца месяца",
   "🎉 Ziel erreicht!": "🎉 Цель достигнута!",
   "Zu viele Versuche. Bitte versuche es in etwa {n} Min. noch einmal.": "Слишком много попыток. Попробуйте снова примерно через {n} мин.",
+  "Rechtliches": "Правовая информация",
+  "Impressum": "Выходные данные",
+  "Datenschutz": "Конфиденциальность",
+  "Diese Seite ist nur auf Deutsch verfügbar. Die deutsche Fassung ist rechtlich verbindlich.": "Эта страница доступна только на немецком языке. Юридически обязательной является немецкая версия.",
 };
 
 export default messages;

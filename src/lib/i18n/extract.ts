@@ -5,8 +5,8 @@ import { join, relative } from "node:path";
 
 const CALL = /(?<![\w.])(?:t|tr|msg)\(\s*("(?:[^"\\]|\\.)*")/g;
 
-/** Bereiche, die bewusst nur Deutsch sind (Adminbereich). */
-const SKIP = [/[\\/]admin[\\/]/, /actions[\\/]admin\.ts$/, /\.test\.tsx?$/, /[\\/]i18n[\\/]/];
+/** Bereiche, die bewusst nur Deutsch sind (Adminbereich, Impressum und Datenschutz). */
+const SKIP = [/[\\/]admin[\\/]/, /[\\/]\(legal\)[\\/]/, /actions[\\/]admin\.ts$/, /\.test\.tsx?$/, /[\\/]i18n[\\/]/];
 
 function files(dir: string): string[] {
   return readdirSync(dir).flatMap((name) => {

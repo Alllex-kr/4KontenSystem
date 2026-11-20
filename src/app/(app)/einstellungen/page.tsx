@@ -5,6 +5,7 @@ import { centsToInput, formatCents, intlLocale } from "@/lib/format";
 import { loadDemoData, saveSettings } from "@/actions/finance";
 import { ActionForm, SubmitButton } from "@/components/ActionForm";
 import { Card, PageHeader } from "@/components/ui";
+import { LegalLinks } from "@/components/LegalLinks";
 import { saveAiSettings } from "@/actions/ai";
 import { getAiStatus } from "@/lib/ai/usage";
 import { getAccess } from "@/lib/access";
@@ -144,6 +145,8 @@ export default async function EinstellungenPage() {
           </form>
         </div>
       </Card>
+
+      <LegalLinks className="pb-2" />
     </div>
   );
 }

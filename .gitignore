@@ -12,3 +12,6 @@ prisma/*.db-journal
 .env.production
 # Zugangsdaten des lokalen Testkontos
 docs/test-login.md
+
+# Datenbank-Sicherungen (npm run backup)
+backups/
